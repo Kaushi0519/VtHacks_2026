@@ -1,4 +1,7 @@
 // Fixed, hand-tuned mesh layout: unverified callers | agents | resources, left to right.
+// Vertical steps are deliberately tight: the mesh is fitted to its panel, and height is the binding
+// dimension (width has slack), so every row of slack costs node size on screen — most visibly with
+// the inspector open. Agent nodes are ~72px tall and resource nodes ~36px, so these keep real gaps.
 // Agents are ordered so every peer pair sits next to each other; resources so access edges barely cross.
 // Unknown ids (new agents/resources in world.yaml) are appended below instead of breaking the layout.
 
@@ -16,8 +19,8 @@ const RESOURCE_ORDER = [
   "credential-vault",
 ];
 
-const AGENT_STEP = 112;
-const RESOURCE_STEP = 80;
+const AGENT_STEP = 100;
+const RESOURCE_STEP = 68;
 const GHOST_STEP = 96;
 
 function slot(order: string[], id: string, seen: string[]): number {

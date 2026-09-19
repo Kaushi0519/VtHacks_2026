@@ -33,7 +33,7 @@ export function Inspector() {
   }
 
   return (
-    <section className="panel relative mx-3 mb-3 grid h-52 grid-cols-[1fr_1fr_1fr_1.5fr] divide-x divide-line overflow-hidden">
+    <section className="panel relative mx-3 mb-3 grid h-48 grid-cols-[1fr_1fr_1fr_1.5fr] divide-x divide-line overflow-hidden">
       <button
         onClick={() => selectAgent(null)}
         className="absolute top-2 right-2 z-10 rounded px-1.5 font-mono text-xs text-dim hover:bg-raised hover:text-slate-200"
