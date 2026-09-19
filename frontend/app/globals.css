@@ -1,11 +1,124 @@
 @import "tailwindcss";
 
+/* Mission-control is dark-only. Tokens become Tailwind utilities: bg-panel, border-line, text-ok, ... */
 @theme inline {
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+
+  --color-void: #04070d;     /* page background */
+  --color-panel: #0a111c;    /* panel surface */
+  --color-raised: #111b2a;   /* hover / selected surface */
+  --color-line: #1c2a3d;     /* panel borders */
+  --color-dim: #5b6b82;      /* labels, secondary text */
+  --color-accent: #22d3ee;   /* brand cyan */
+  --color-ok: #34d399;
+  --color-warn: #fbbf24;
+  --color-high: #fb923c;
+  --color-crit: #f43f5e;
 }
 
-/* Mission-control is dark-only. TODO(P2): theme tokens, glow, animations. */
 body {
   font-family: var(--font-geist-sans), system-ui, sans-serif;
+  background:
+    radial-gradient(ellipse 80% 50% at 50% -10%, rgb(34 211 238 / 0.07), transparent 70%),
+    var(--color-void);
+}
+
+/* A framed dashboard panel with a small uppercase header. */
+@utility panel {
+  background: color-mix(in srgb, var(--color-panel) 92%, transparent);
+  border: 1px solid var(--color-line);
+  border-radius: 0.5rem;
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.03);
+}
+
+@utility panel-title {
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 0.6875rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--color-dim);
+}
+
+@utility glow-ok {
+  box-shadow: 0 0 0 1px rgb(52 211 153 / 0.35), 0 0 18px rgb(52 211 153 / 0.25);
+}
+
+@utility glow-crit {
+  box-shadow: 0 0 0 1px rgb(244 63 94 / 0.5), 0 0 24px rgb(244 63 94 / 0.35);
+}
+
+/* Soft breathing pulse for status lights. */
+@keyframes sm-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.45; transform: scale(0.85); }
+}
+
+/* Urgent flash for critical state (quarantine). */
+@keyframes sm-alarm {
+  0%, 100% { background-color: rgb(244 63 94 / 0.14); }
+  50% { background-color: rgb(244 63 94 / 0.28); }
+}
+
+@utility animate-pulse-soft {
+  animation: sm-pulse 2.4s ease-in-out infinite;
+}
+
+@utility animate-alarm {
+  animation: sm-alarm 1.2s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-pulse-soft,
+  .animate-alarm {
+    animation: none;
+  }
+}
+
+/* Let the mesh graph sit on the panel surface instead of React Flow's own gray. */
+.react-flow {
+  --xy-background-color: transparent;
+}
+
+/* Mesh graph packets (components/graph/edges.tsx). Durations must fit inside PULSE_MS (1.6s). */
+@keyframes packet-fade {
+  0%, 60% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+@keyframes packet-trail {
+  0% { stroke-opacity: 0.55; }
+  100% { stroke-opacity: 0; }
+}
+
+@keyframes packet-block {
+  0% { opacity: 0; transform: scale(0.2); }
+  60% { opacity: 1; transform: scale(1.25); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+.packet {
+  animation: packet-fade 1.6s ease-out forwards;
+}
+
+.packet-trail {
+  animation: packet-trail 1.2s ease-out forwards;
+}
+
+/* Inner <g> so the CSS scale doesn't fight the translate() attribute on the outer one. */
+.packet-block > * {
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: packet-block 0.35s ease-out 0.5s forwards;
+}
+
+/* New feed rows slide in so fresh decisions catch the eye. */
+@keyframes feed-in {
+  from { opacity: 0; transform: translateY(-4px); background-color: rgb(34 211 238 / 0.12); }
+  to { opacity: 1; transform: none; }
+}
+
+.feed-row {
+  animation: feed-in 0.5s ease-out;
 }

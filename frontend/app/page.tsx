@@ -13,9 +13,11 @@ export default function MissionControl() {
   return (
     <div className="grid h-screen grid-rows-[auto_1fr_auto_auto]">
       <TopBar />
-      <main className="grid min-h-0 grid-cols-[240px_1fr_380px]">
+      <main className="grid min-h-0 grid-cols-[260px_1fr_380px] gap-3 p-3">
         <AgentList />
-        <AgentMesh />
+        <div className="panel min-h-0 overflow-hidden">
+          <AgentMesh />
+        </div>
         <ActivityFeed />
       </main>
       <Inspector />
