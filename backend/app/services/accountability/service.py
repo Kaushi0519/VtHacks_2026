@@ -89,6 +89,7 @@ def _row(
         denied_by_scope={s: dict(c) for s, c in acc.denied_by_scope.items()},
         grants=repo.list_grants(db, agent_id=agent_id) if agent else [],
         forbidden=world.role(agent.role).forbidden if agent else [],
+        attempted_scopes=set(acc.scopes),
     ))
     return AgentActivityRow(
         agent_id=agent_id,
@@ -161,6 +162,9 @@ def agent_report(db: Session, world: World, agent_id: str, start: datetime, end:
             unused_standing=sorted(
                 g.scope for g in all_grants
                 if g.kind == GrantKind.BASELINE and (g.last_used_at is None or g.last_used_at < start)
+                # attempted-but-blocked (e.g. require_human) is needed, not surplus — same rule as the
+                # UNUSED_STANDING_GRANT finding, kept consistent so the report doesn't contradict itself.
+                and not any(any_match([g.scope], attempted) for attempted in acc.scopes)
             ),
         )
 
