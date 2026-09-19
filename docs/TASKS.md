@@ -62,7 +62,7 @@ Until S1/S2 are done, run everything in `ANS_MODE=mock` — the full demo works 
 | HIGH risk + sensitive resource → REQUIRE_HUMAN ("restrict") | P3 | `policy/enforcement.py` |
 | Proof-of-possession demo: spoofed ANS name without key → deny | P3 | per-agent signing secret; documents the mTLS story |
 | Ambient traffic running during the demo | I | `ambient` scenario exists |
-| Grant/revoke UI buttons (JIT grant form) | P2 | `POST /api/agents/{id}/grants` |
+| Grant/revoke UI buttons (JIT grant form) | P2 | ✅ Kiernan: grant form in inspector + "fix" button on the accountability report; revoke on grant cards |
 | Loading/error/offline states | I, P2 | |
 | Postgres via `DATABASE_URL` (only if needed) | P1 | |
 

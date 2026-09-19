@@ -4,6 +4,7 @@ import clsx from "clsx";
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import { time } from "@/lib/format";
+import { GrantForm } from "@/components/permissions/GrantForm";
 import { useSentinel } from "@/lib/store";
 import type { AgentReport } from "@/types/sentinel";
 import { HYPOTHESIS, SEVERITY_TEXT } from "./hypotheses";
@@ -12,6 +13,7 @@ import { RiskSparkline } from "./RiskSparkline";
 export function AgentReportPanel({ agentId, days, version }: { agentId: string; days: number; version: number }) {
   const [report, setReport] = useState<AgentReport | null>(null);
   const policy = useSentinel((s) => s.system?.riskPolicy);
+  const liveAgent = useSentinel((s) => s.agents[agentId]);
   useEffect(() => {
     let live = true;
     api.agentReport(agentId, days).then((r) => live && setReport(r)).catch(console.error);
@@ -25,6 +27,8 @@ export function AgentReportPanel({ agentId, days, version }: { agentId: string; 
   const denials = Object.entries(report.denialsByReason).sort((a, b) => b[1] - a[1]);
   const maxDenial = Math.max(1, ...denials.map(([, n]) => n));
   const unused = report.grants?.unusedStanding ?? [];
+  // In-role scopes it keeps getting refused: the likely fix for a misconfigured agent.
+  const refusedInRole = report.scopes.filter((s) => s.inRole && s.denied > 0).map((s) => s.scope);
 
   return (
     <section className="panel space-y-4 p-4">
@@ -64,6 +68,14 @@ export function AgentReportPanel({ agentId, days, version }: { agentId: string; 
               </li>
             ))}
           </ul>
+        )}
+        {liveAgent && liveAgent.status === "active" && (
+          <GrantForm
+            key={agentId}
+            agentId={agentId}
+            suggestions={refusedInRole}
+            label={report.hypothesis === "likely_misconfigured" && refusedInRole[0] ? `FIX: GRANT ${refusedInRole[0]} TEMPORARILY` : "+ GRANT TEMPORARY ACCESS"}
+          />
         )}
       </div>
 

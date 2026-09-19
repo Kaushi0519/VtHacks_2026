@@ -6,7 +6,8 @@ import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import { actionError, decisionStyle, time } from "@/lib/format";
 import { useSentinel } from "@/lib/store";
-import type { Agent, Incident, SentinelEvent } from "@/types/sentinel";
+import type { Agent, Incident, PermissionGrant, SentinelEvent } from "@/types/sentinel";
+import { GrantForm } from "@/components/permissions/GrantForm";
 import { GrantList } from "@/components/permissions/GrantList";
 import { AnalysisBox, BehaviorCard, IdentityCard, Section } from "./InspectorCards";
 
@@ -79,7 +80,20 @@ function useIncidentEvents(incident: Incident | null): SentinelEvent[] {
   return id && loaded?.id === id ? loaded.events : [];
 }
 
+// Scopes this agent was recently refused for lack of a grant, plus scopes it held temporarily before.
+// Only suggestions: the backend still decides what is grantable for the role.
+function grantSuggestions(agentId: string, events: SentinelEvent[], grants: Record<string, PermissionGrant>): string[] {
+  const refused = events
+    .filter((e) => e.actorAgentId === agentId && e.action && (e.reasonCode === "NO_GRANT" || e.reasonCode === "GRANT_EXPIRED" || e.reasonCode === "GRANT_REVOKED"))
+    .map((e) => e.action!);
+  const held = Object.values(grants)
+    .filter((g) => g.agentId === agentId && g.kind === "temporary")
+    .map((g) => g.scope);
+  return [...new Set([...refused, ...held])];
+}
+
 function Subject({ agent, actorId, incident }: { agent: Agent | null; actorId: string; incident: Incident | null }) {
+  const { events, grants } = useSentinel();
   const quarantined = agent?.status === "quarantined";
   return (
     <Section title="Subject">
@@ -99,6 +113,7 @@ function Subject({ agent, actorId, incident }: { agent: Agent | null; actorId: s
           </p>
           <OperatorActions agentId={agent.id} quarantined={quarantined} />
           <GrantList agentId={agent.id} />
+          {!quarantined && <GrantForm key={agent.id} agentId={agent.id} suggestions={grantSuggestions(agent.id, events, grants)} />}
         </>
       ) : (
         <>

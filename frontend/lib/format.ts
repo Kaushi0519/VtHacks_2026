@@ -36,6 +36,8 @@ export const decisionStyle: Record<Decision, { label: string; icon: string; clas
 export function actionError(e: unknown): string {
   const msg = String(e instanceof Error ? e.message : e);
   if (msg.includes("-> 401")) return "Not authorized (operator token required).";
+  const detail = msg.match(/"detail":\s*"([^"]+)"/);
+  if (detail) return detail[1]; // FastAPI HTTPException text, e.g. "x is not grantable to the y role"
   if (msg.includes("Failed to fetch")) return "Backend unreachable.";
   return msg.length > 120 ? `${msg.slice(0, 120)}…` : msg;
 }

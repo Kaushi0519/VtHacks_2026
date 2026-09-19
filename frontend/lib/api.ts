@@ -42,8 +42,8 @@ export const api = {
     call<Agent>(API_URL, `/api/agents/${id}/quarantine`, post({ reason })),
   release: (id: string, note = "Reviewed and released by operator") =>
     call<Agent>(API_URL, `/api/agents/${id}/release`, post({ note })),
-  grant: (id: string, scope: string, ttlSeconds: number, reason: string) =>
-    call<PermissionGrant>(API_URL, `/api/agents/${id}/grants`, post({ scope, ttlSeconds, reason })),
+  grant: (id: string, scope: string, ttlSeconds: number, reason: string, idleTimeoutSeconds?: number) =>
+    call<PermissionGrant>(API_URL, `/api/agents/${id}/grants`, post({ scope, ttlSeconds, reason, idleTimeoutSeconds })),
   revokeGrant: (grantId: string) => call<PermissionGrant>(API_URL, `/api/grants/${grantId}/revoke`, post()),
   incident: (id: string) => call<IncidentDetail>(API_URL, `/api/incidents/${id}`),
   events: (f: { agentId?: string; kind?: string; decision?: string; reasonCode?: string; beforeSeq?: number; limit?: number }) =>
