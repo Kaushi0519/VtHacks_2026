@@ -59,7 +59,9 @@ def evaluate(inp: FindingInput) -> list[Finding]:
     # Match on the role's forbidden patterns, not reason codes: a forbidden request that tipped the
     # agent into quarantine is recorded with reason RISK_THRESHOLD.
     out_of_role = {s: sum(r.values()) for s, r in inp.denied_by_scope.items() if any_match(inp.forbidden, s)}
-    if t.quarantines or sum(out_of_role.values()) >= OUT_OF_ROLE_MIN:
+    # Quarantine may be manual or triggered by other behavior (e.g. request volume).
+    # It can raise the severity of this finding, but cannot establish out-of-role evidence.
+    if sum(out_of_role.values()) >= OUT_OF_ROLE_MIN:
         findings.append(Finding(
             code="REPEATED_OUT_OF_ROLE",
             severity=Severity.CRITICAL if t.quarantines else Severity.HIGH,

@@ -3,6 +3,8 @@
 import time
 from datetime import datetime, timedelta, timezone
 
+import pytest
+
 ANS = "ans://v1.0.0.{}.demo-hospital.example"
 
 
@@ -135,6 +137,35 @@ def test_backfill_uses_observed_time(client):
     events = client.get("/api/events", params={"agentId": "payroll-agent"}).json()["items"]
     assert events[0]["metadata"]["backfill"] is True
     assert events[0]["timestamp"].startswith(past.date().isoformat())
+
+
+@pytest.mark.parametrize("forbidden_requests", [0, 1, 2])
+def test_manual_quarantine_does_not_invent_repeated_out_of_role_requests(client, forbidden_requests):
+    assert ask(client, "facilities", "building.energy.read")["decision"] == "allow"
+    for _ in range(forbidden_requests):
+        ask(client, "facilities", "payroll.salary.read")
+    response = client.post("/api/agents/facilities-agent/quarantine", json={"reason": "Operator maintenance check"})
+    assert response.status_code == 200
+    assert response.json()["status"] == "quarantined"
+
+    def check_report():
+        report = client.get("/api/accountability/agents/facilities-agent").json()
+        overview = client.get("/api/accountability/overview").json()
+        row = next(a for a in overview["agents"] if a["agentId"] == "facilities-agent")
+        for item in (report, row):
+            assert item["totals"]["quarantines"] >= 1
+            findings = [f for f in item["findings"] if f["code"] == "REPEATED_OUT_OF_ROLE"]
+            assert bool(findings) == (forbidden_requests >= 2)
+            if forbidden_requests < 2:
+                assert item["hypothesis"] != "possibly_compromised"
+            else:
+                assert item["hypothesis"] == "possibly_compromised"
+
+    check_report()
+    released = client.post("/api/agents/facilities-agent/release", json={"note": "Maintenance complete"})
+    assert released.status_code == 200
+    assert released.json()["status"] == "active"
+    check_report()
 
 
 def test_snapshot_shape(client):

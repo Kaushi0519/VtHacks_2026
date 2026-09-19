@@ -1,5 +1,11 @@
 # Task board
 
+## Completed audit fixes
+
+- [x] Person 3: require repeated forbidden-request evidence for the accountability
+  out-of-role finding; manual quarantine alone is insufficient. Regression tests
+  cover fleet and agent reports before/after release. See `SECURITY-VALIDATION.md`.
+
 **Already done (scaffold):** contracts, gateway pipeline, mock + GoDaddy ANS adapters, policy engine,
 risk signals, quarantine, permission decay + sweeper, incidents, rule-based analyzer + Gemini adapter,
 accountability API, SSE, simulator with 6 scenarios + smoke test, minimal dashboard + accountability

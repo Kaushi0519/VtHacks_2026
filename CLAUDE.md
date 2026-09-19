@@ -18,6 +18,10 @@ its Behavioral Risk Score spikes, and Sentinel quarantines it.
 
 ## Current status (keep this section up to date; last updated 2026-09-19)
 
+- Accountability audit fix: quarantine alone no longer implies repeated out-of-role
+  requests. Regression coverage checks zero, one, and two forbidden requests before
+  and after release. See `docs/SECURITY-VALIDATION.md`.
+
 **Every session: run `git checkout main && git pull --rebase` first, then read this section and
 `docs/TASKS.md`.**
 
