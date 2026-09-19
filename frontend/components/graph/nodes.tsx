@@ -12,7 +12,8 @@ const hidden = "!h-1 !w-1 !min-w-0 !border-0 !bg-transparent";
 
 export type AgentNodeData = { agent: Agent; active: boolean; selected: boolean };
 export type ResourceNodeData = { label: string; resource?: Resource; hit: boolean };
-export type GhostNodeData = { actorId: string; ansStatus: string };
+// detail: why it failed — "ANS NOT_FOUND" (identity) or "NOT ENROLLED" (valid ANS name, not our agent).
+export type GhostNodeData = { actorId: string; detail: string };
 export type ZoneNodeData = { label: string; tone?: "crit" };
 
 export function AgentNode({ data: { agent: a, active, selected } }: NodeProps<Node<AgentNodeData>>) {
@@ -35,7 +36,7 @@ export function AgentNode({ data: { agent: a, active, selected } }: NodeProps<No
       <div className="mt-1.5 h-1 overflow-hidden rounded-full bg-line">
         <div className={clsx("h-full transition-[width] duration-700", riskFill[a.riskLevel])} style={{ width: `${Math.min(100, a.riskScore)}%` }} />
       </div>
-      <div className="mt-1 font-mono text-[9px] tracking-widest">
+      <div className="mt-1 font-mono text-[10px] tracking-widest">
         {quarantined ? (
           <span className="font-bold text-crit">⛔ ISOLATED FROM MESH</span>
         ) : (
@@ -59,17 +60,17 @@ export function ResourceNode({ data: { label, resource: r, hit } }: NodeProps<No
       <Handle type="target" position={Position.Left} id="in" className={hidden} />
       <span className={clsx("h-1.5 w-1.5 shrink-0 rounded-full", SENSITIVITY_DOT[r?.sensitivity ?? "low"])} title={`${r?.sensitivity ?? "?"} sensitivity`} />
       <span className="min-w-0 flex-1 truncate text-xs text-slate-300">{label}</span>
-      {r?.honeypot && <span className="font-mono text-[9px] text-dim">DECOY</span>}
+      {r?.honeypot && <span className="font-mono text-[10px] text-dim">DECOY</span>}
     </div>
   );
 }
 
-export function GhostNode({ data: { actorId, ansStatus } }: NodeProps<Node<GhostNodeData>>) {
+export function GhostNode({ data: { actorId, detail } }: NodeProps<Node<GhostNodeData>>) {
   return (
     <div className="w-[180px] rounded-lg border border-dashed border-crit/70 bg-crit/5 px-3 py-2 opacity-90">
       <Handle type="source" position={Position.Right} id="out" className={hidden} />
       <div className="truncate font-mono text-xs text-crit">? {actorId}</div>
-      <div className="mt-0.5 font-mono text-[9px] tracking-widest text-crit/80">UNVERIFIED · ANS {ansStatus}</div>
+      <div className="mt-0.5 font-mono text-[10px] tracking-widest text-crit/80">UNVERIFIED · {detail}</div>
     </div>
   );
 }

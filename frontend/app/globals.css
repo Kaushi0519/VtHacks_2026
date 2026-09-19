@@ -9,12 +9,19 @@
   --color-panel: #0a111c;    /* panel surface */
   --color-raised: #111b2a;   /* hover / selected surface */
   --color-line: #1c2a3d;     /* panel borders */
-  --color-dim: #5b6b82;      /* labels, secondary text */
+  --color-dim: #7b8aa2;      /* labels, secondary text (≥4.5:1 on panel for AA) */
   --color-accent: #22d3ee;   /* brand cyan */
   --color-ok: #34d399;
   --color-warn: #fbbf24;
   --color-high: #fb923c;
   --color-crit: #f43f5e;
+}
+
+/* Keyboard users always see where they are. */
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+  border-radius: 4px;
 }
 
 body {

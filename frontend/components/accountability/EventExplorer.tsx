@@ -7,6 +7,15 @@ import { decisionStyle } from "@/lib/format";
 import type { Decision, SentinelEvent } from "@/types/sentinel";
 
 const PAGE = 50;
+
+// Today's events show just the time; older ones add the date.
+function stamp(iso: string): string {
+  const d = new Date(iso);
+  const today = d.toDateString() === new Date().toDateString();
+  return today
+    ? d.toLocaleTimeString([], { hour12: false })
+    : d.toLocaleString([], { hour12: false, month: "short", day: "2-digit", hour: "2-digit", minute: "2-digit" });
+}
 const DECISIONS: (Decision | "all")[] = ["all", "allow", "deny", "require_human", "quarantine"];
 
 export function EventExplorer({ agentId, agentName, version }: { agentId: string | null; agentName: string | null; version: number }) {
@@ -78,10 +87,12 @@ export function EventExplorer({ agentId, agentName, version }: { agentId: string
           return (
             <li key={e.id}>
               <button onClick={() => setOpen(expanded ? null : e.id)} className={clsx("flex w-full gap-2 rounded px-1.5 py-0.5 text-left", expanded ? "bg-raised" : "hover:bg-raised/60")}>
-                <span className="shrink-0 text-dim">{new Date(e.timestamp).toLocaleString([], { hour12: false, month: "short", day: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit" })}</span>
-                <span className={clsx("w-24 shrink-0 whitespace-nowrap", d?.className ?? "text-accent")}>{d ? `${d.icon} ${d.label}` : e.kind.toUpperCase()}</span>
-                <span className="w-32 shrink-0 truncate text-slate-300">{e.actorAgentId}</span>
-                <span className="min-w-0 flex-1 truncate text-slate-400">{e.action ?? ""}</span>
+                <span className="w-24 shrink-0 text-dim">{stamp(e.timestamp)}</span>
+                <span className={clsx("w-24 shrink-0 whitespace-nowrap", e.decision === "allow" ? "text-ok/70" : (d?.className ?? "text-accent"))}>
+                  {d ? `${d.icon} ${d.label}` : e.kind.toUpperCase()}
+                </span>
+                {!scopeAgent && <span className="w-32 shrink-0 truncate text-slate-300">{e.actorAgentId}</span>}
+                <span className={clsx("min-w-0 flex-1 truncate", e.decision === "allow" ? "text-dim" : "text-slate-300")}>{e.action ?? ""}</span>
                 {e.decision !== "allow" && <span className="shrink-0 text-dim">{e.reasonCode}</span>}
               </button>
               {expanded && (

@@ -66,7 +66,7 @@ export function ActivityFeed() {
         ))}
         {shown.length === 0 && (
           <li className="px-2 py-6 text-center font-sans text-dim">
-            {events.length === 0 ? "No traffic yet. Start a scenario below." : "Nothing matches this filter."}
+            {events.length === 0 ? "No traffic yet. Press 1 (or a demo button below) to start." : "Nothing matches this filter."}
           </li>
         )}
       </ul>
@@ -74,8 +74,10 @@ export function ActivityFeed() {
   );
 }
 
+// Allowed traffic is the quiet baseline; anything Sentinel blocked or escalated stays loud.
 function FeedRow({ e, who, known, selected, onClick }: { e: SentinelEvent; who: string; known: boolean; selected: boolean; onClick: () => void }) {
   const d = e.decision ? decisionStyle[e.decision] : null;
+  const quiet = e.decision === "allow";
   const riskMoved = e.riskBefore !== null && e.riskAfter !== null && e.riskAfter !== e.riskBefore;
   return (
     <li>
@@ -85,34 +87,34 @@ function FeedRow({ e, who, known, selected, onClick }: { e: SentinelEvent; who: 
         className={clsx(
           "feed-row relative flex w-full gap-2 overflow-hidden rounded py-1 pr-2 pl-3 text-left transition-colors",
           selected ? "bg-raised ring-1 ring-accent/50" : "hover:bg-raised/60",
-          e.decision && e.decision !== "allow" && !selected && "bg-crit/5",
+          e.decision && !quiet && !selected && "bg-crit/5",
         )}
       >
-        <span className={clsx("absolute inset-y-0 left-0 w-0.5", BAR[e.decision ?? e.kind] ?? "bg-line")} />
+        <span className={clsx("absolute inset-y-0 left-0 w-0.5", BAR[e.decision ?? e.kind] ?? "bg-line", quiet && "opacity-40")} />
         <span className="shrink-0 text-dim">{time(e.timestamp)}</span>
         <span className="min-w-0 flex-1">
           <span className="flex flex-wrap items-baseline gap-x-1.5">
             {d ? (
-              <span className={clsx("font-bold", d.className)}>
+              <span className={clsx(quiet ? "text-ok/70" : ["font-bold", d.className])}>
                 {d.icon} {d.label}
               </span>
             ) : (
-              <span className="text-accent">{e.kind.replace("_", " ").toUpperCase()}</span>
+              <span className="text-accent/80">{e.kind.replace("_", " ").toUpperCase()}</span>
             )}
-            <span className={known ? "text-slate-200" : "text-crit"}>{known ? who : `? ${who}`}</span>
+            <span className={!known ? "text-crit" : quiet ? "text-slate-400" : "text-slate-100"}>{known ? who : `? ${who}`}</span>
             {riskMoved && (
               <span className={clsx("rounded px-1 text-[10px]", e.riskAfter! > e.riskBefore! ? "bg-high/15 text-high" : "bg-ok/15 text-ok")}>
                 risk {e.riskBefore}→{e.riskAfter}
               </span>
             )}
-            {e.incidentId && e.kind === "request" && e.decision !== "allow" && (
-              <span className="rounded border border-crit/40 px-1 text-[9px] tracking-wider text-crit">INCIDENT</span>
+            {e.incidentId && e.kind === "request" && !quiet && (
+              <span className="rounded border border-crit/40 px-1 text-[10px] tracking-wider text-crit">INCIDENT</span>
             )}
           </span>
           {e.action && (
-            <span className="block truncate text-slate-400">
+            <span className={clsx("block truncate", quiet ? "text-dim" : "text-slate-300")}>
               {e.action}
-              {e.decision && e.decision !== "allow" && e.reasonCode && <span className="text-dim"> · {e.reasonCode}</span>}
+              {e.decision && !quiet && e.reasonCode && <span className="text-dim"> · {e.reasonCode}</span>}
             </span>
           )}
         </span>

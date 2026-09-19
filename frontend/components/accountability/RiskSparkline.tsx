@@ -54,7 +54,7 @@ export function RiskSparkline({ points, start, end, policy }: { points: { timest
         style={{ left: `${(x(peak.timestamp) / W) * 100}%`, top: `${(y(peak.risk) / H) * 96}px` }}
       />
       {policy && (
-        <span className="pointer-events-none absolute right-0 font-mono text-[9px] text-crit/80" style={{ top: `${(y(policy.thresholdCritical) / H) * 100}%`, transform: "translateY(-110%)" }}>
+        <span className="pointer-events-none absolute right-0 font-mono text-[10px] text-crit/80" style={{ top: `${(y(policy.thresholdCritical) / H) * 100}%`, transform: "translateY(-110%)" }}>
           quarantine {policy.thresholdCritical}
         </span>
       )}
@@ -67,7 +67,7 @@ export function RiskSparkline({ points, start, end, policy }: { points: { timest
           <span className="block text-dim">{new Date(hp.timestamp).toLocaleString([], { hour12: false, month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}</span>
         </div>
       )}
-      <div className="mt-0.5 flex justify-between font-mono text-[9px] text-dim">
+      <div className="mt-0.5 flex justify-between font-mono text-[10px] text-dim">
         <span>{new Date(start).toLocaleDateString([], { month: "short", day: "numeric" })}</span>
         <span>peak {peak.risk}</span>
         <span>now</span>

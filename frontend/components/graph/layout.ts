@@ -33,7 +33,7 @@ export const ghostPosition = (index: number) => ({ x: COLUMN_X.ghost, y: 40 + in
 export const INK = {
   line: "#1c2a3d",
   edge: "#2a3b52",
-  dim: "#5b6b82",
+  dim: "#7b8aa2",
   accent: "#22d3ee",
   ok: "#34d399",
   warn: "#fbbf24",

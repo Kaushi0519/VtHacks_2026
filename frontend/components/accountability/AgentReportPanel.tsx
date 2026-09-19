@@ -115,7 +115,7 @@ export function AgentReportPanel({ agentId, days, version }: { agentId: string; 
               <li key={s.scope} title={`${s.allowed} allowed, ${s.denied} denied${s.lastAt ? `, last ${time(s.lastAt)}` : ""}`}>
                 <div className="flex items-center gap-2 font-mono text-[11px]">
                   <span className={clsx("min-w-0 flex-1 truncate", s.inRole ? "text-slate-300" : "text-crit")}>{s.scope}</span>
-                  {!s.inRole && <span className="text-[9px] font-bold text-crit">OUT OF ROLE</span>}
+                  {!s.inRole && <span className="text-[10px] font-bold text-crit">OUT OF ROLE</span>}
                   <span className="text-slate-100 tabular-nums">{s.total}</span>
                 </div>
                 {/* Allowed then denied, 2px gap between the two fills. */}
@@ -126,7 +126,7 @@ export function AgentReportPanel({ agentId, days, version }: { agentId: string; 
               </li>
             ))}
           </ul>
-          <p className="mt-1.5 flex gap-3 font-mono text-[9px] text-dim">
+          <p className="mt-1.5 flex gap-3 font-mono text-[10px] text-dim">
             <span><span className="mr-1 inline-block h-1.5 w-2.5 rounded-full bg-ok/80" />allowed</span>
             <span><span className="mr-1 inline-block h-1.5 w-2.5 rounded-full bg-crit/80" />denied</span>
           </p>

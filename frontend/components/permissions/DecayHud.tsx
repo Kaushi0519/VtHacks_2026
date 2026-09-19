@@ -1,5 +1,5 @@
 "use client";
-// Owner: Person 2. Big countdown overlay on the mesh for just-in-time grants.
+// Owner: Person 2. Big countdown for just-in-time grants, pinned under the agent list.
 // Readable from across the room: the grant shrinks to zero and visibly disappears.
 import clsx from "clsx";
 import { barColor, countdownLabel, endLabel, isOnStage, isTemporary, remainingFraction } from "@/lib/grants";
@@ -15,7 +15,7 @@ export function DecayHud() {
   if (shown.length === 0) return null;
 
   return (
-    <div className="pointer-events-none absolute bottom-12 left-3 z-10 w-72 space-y-2">
+    <div className="space-y-2 border-t border-line px-2 pt-2 pb-2">
       {shown.map((g) => {
         const active = g.status === "active";
         const frac = remainingFraction(g, now);
@@ -23,7 +23,7 @@ export function DecayHud() {
           <div
             key={g.id}
             className={clsx(
-              "rounded-lg border bg-void/90 px-3 py-2 backdrop-blur",
+              "rounded-lg border bg-void/60 px-3 py-2",
               active ? "border-accent/50" : "decay-ended border-crit/60",
             )}
           >

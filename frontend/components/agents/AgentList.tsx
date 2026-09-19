@@ -2,6 +2,7 @@
 // Owner: Person 2. One card per agent: identity (ANS) and behavior (risk meter) shown separately.
 import clsx from "clsx";
 import { riskColor, riskFill } from "@/lib/format";
+import { DecayHud } from "@/components/permissions/DecayHud";
 import { countdownLabel, isTemporary } from "@/lib/grants";
 import { useSentinel } from "@/lib/store";
 import { useNow } from "@/lib/useNow";
@@ -24,6 +25,7 @@ export function AgentList() {
         ))}
         {list.length === 0 && <li className="px-2 py-4 text-sm text-dim">Waiting for backend…</li>}
       </ul>
+      <DecayHud />
     </aside>
   );
 }
@@ -62,7 +64,7 @@ function AgentCard({ agent: a, policy, selected, onSelect }: { agent: Agent; pol
           {!a.identity ? (
             <span className="text-dim">ANS ?</span>
           ) : verified ? (
-            <span className="text-ok">ANS ✓{a.identity.source === "mock" && <span className="text-warn"> MOCK</span>}</span>
+            <span className="text-ok">ANS ✓{a.identity.source === "mock" && <span className="text-dim"> mock</span>}</span>
           ) : (
             <span className="text-crit">ANS ✕ {a.identity.ansStatus}</span>
           )}
