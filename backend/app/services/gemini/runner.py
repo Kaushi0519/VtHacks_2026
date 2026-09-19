@@ -24,7 +24,7 @@ from app.db import repo
 from app.models.agent import AgentStatus
 from app.models.common import Severity
 from app.models.event import EventKind, ReasonCode
-from app.models.incident import BehaviorAnalysis, RecommendedAction
+from app.models.incident import BehaviorAnalysis, RecommendedAction, IncidentStatus
 from app.services.behavior.risk import cooled_score, level_for, semantic_points
 from app.services.event_factory import lifecycle_event
 from app.services.gemini.telemetry import incident_telemetry, review_telemetry
@@ -45,6 +45,21 @@ class AnalysisRunner:
         self._inflight: set[str] = set()          # incident ids currently being analyzed
         self._reviewing: set[str] = set()          # agent ids currently under semantic review
         self._review_last: dict[str, float] = {}   # agent id -> monotonic time of last review
+        self._epoch = 0
+        self._revisions: dict[str, int] = {}
+
+    def invalidate(self, agent_id: str | None = None) -> None:
+        """Called under state_lock after reset/release; old results cannot change new state."""
+        if agent_id is None:
+            self._epoch += 1
+            self._revisions.clear()
+            self._review_last.clear()
+        else:
+            self._revisions[agent_id] = self._revisions.get(agent_id, 0) + 1
+            self._review_last.pop(agent_id, None)
+
+    def _token(self, agent_id: str) -> tuple[int, int]:
+        return self._epoch, self._revisions.get(agent_id, 0)
 
     # --- incident-triggered analysis (a hard rule already fired) ---
     def schedule(self, incident_id: str) -> None:
@@ -80,8 +95,9 @@ class AnalysisRunner:
                     return  # gone (reset) or already analyzed
                 telemetry = incident_telemetry(db, self.c.world, incident)
                 agent_id = incident.agent_id
+                token = self._token(agent_id)
             analysis = await self.c.analyzer.analyze_incident(telemetry)
-            await self._apply(agent_id, analysis, incident_id=incident_id)
+            await self._apply(agent_id, analysis, incident_id=incident_id, token=token)
         except Exception:
             log.exception("analysis failed for %s", incident_id)
 
@@ -92,24 +108,32 @@ class AnalysisRunner:
                 if agent is None or agent.status == AgentStatus.QUARANTINED:
                     return
                 telemetry = review_telemetry(db, self.c.world, agent)
+                token = self._token(agent_id)
             analysis = await self.c.analyzer.analyze_incident(telemetry)
-            await self._apply(agent_id, analysis, incident_id=None)
+            await self._apply(agent_id, analysis, incident_id=None, token=token)
         except Exception:
             log.exception("semantic review failed for %s", agent_id)
 
-    async def _apply(self, agent_id: str, analysis: BehaviorAnalysis, *, incident_id: str | None) -> None:
+    async def _apply(self, agent_id: str, analysis: BehaviorAnalysis, *, incident_id: str | None,
+                     token: tuple[int, int]) -> None:
         c = self.c
         rp = c.world.risk_policy
         changes = Changes()
         async with c.state_lock:
+            if token != self._token(agent_id):
+                return
             with c.session_factory() as db:
+                incident = repo.get_incident(db, incident_id) if incident_id else None
+                if incident_id and (incident is None or incident.status != IncidentStatus.OPEN):
+                    return
                 agent = repo.get_agent(db, agent_id)
-                if agent is None:
+                if agent is None and incident is None:
                     return
                 now = utcnow()
                 points = semantic_points(analysis.source, analysis.severity, rp)
                 triggers_quarantine = (
-                    analysis.source == "gemini"
+                    agent is not None
+                    and analysis.source == "gemini"
                     and analysis.severity == Severity.CRITICAL
                     and analysis.confidence >= rp.ai_quarantine_min_confidence
                     and analysis.recommended_action == RecommendedAction.QUARANTINE
@@ -124,7 +148,8 @@ class AnalysisRunner:
 
                 if triggers_quarantine:
                     # Gemini decided. Reflect its finding in the score, then isolate the agent.
-                    bumped = max(0, min(100, cooled_score(agent, now, rp) + points))
+                    risk_before = cooled_score(agent, now, rp)
+                    bumped = max(0, min(100, risk_before + points))
                     agent = agent.model_copy(update={
                         "risk_score": bumped, "risk_level": level_for(bumped, rp), "risk_updated_at": now,
                     })
@@ -132,10 +157,16 @@ class AnalysisRunner:
                         f"Gemini semantic analysis flagged {analysis.severity.value} risk "
                         f"({analysis.confidence:.0%}): {analysis.reason}"
                     )
-                    qchanges = quarantine.quarantine(db, agent, now, rp, reason=reason, triggered_by="auto")
+                    qchanges = quarantine.quarantine(
+                        db, agent, now, rp, reason=reason, triggered_by="auto",
+                        reason_code=ReasonCode.AI_SEMANTIC_QUARANTINE, risk_before=risk_before,
+                    )
                     qchanges.analyze_incident_ids.clear()  # this incident already carries its analysis
                     for inc in list(qchanges.incidents.values()):
-                        ev = repo.append_event(db, self._analysis_event(agent_id, analysis, now, inc.id, inc.trigger_event_id))
+                        ev = repo.append_event(db, self._analysis_event(
+                            agent_id, analysis, now, inc.id, inc.trigger_event_id,
+                            risk_before=risk_before, risk_after=bumped,
+                        ))
                         qchanges.events.append(ev)
                         qchanges.incident(inc.model_copy(update={
                             "analysis": analysis, "analysis_status": "done",
@@ -145,8 +176,8 @@ class AnalysisRunner:
                     changes.merge(qchanges)
                 else:
                     incident = repo.get_incident(db, incident_id) if incident_id else None
-                    risk_before = risk_after = agent.risk_score
-                    if points and agent.status != AgentStatus.QUARANTINED:
+                    risk_before = risk_after = agent.risk_score if agent else None
+                    if agent is not None and points and agent.status != AgentStatus.QUARANTINED:
                         risk_before = cooled_score(agent, now, rp)
                         risk_after = max(0, min(100, risk_before + points))
                         agent = agent.model_copy(update={

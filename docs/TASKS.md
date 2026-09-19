@@ -88,3 +88,12 @@ ANS lifecycle feed sync (`GET /v1/agents/events`) · delegation-chain policies.
 5. Backfill + accountability page (I3, B3, F5)
 6. Swap in real ANS (S2) and Gemini (S3): no interface changes
 7. Freeze main → rehearse (I5) → record backup video
+
+
+## Security audit follow-up (security/analysis-audit-fixes)
+
+Implemented with regression tests: reset/release invalidation of AI results, unknown
+caller explanations, semantic quarantine audit attribution, release evidence, ANS
+badge/cache/verifier hardening, and world configuration checks. See
+`ANALYSIS-AUDIT-FIXES.md` for validation scope and remaining work. Pending team review;
+this does not mark live ANS tasks S1/S2 complete.

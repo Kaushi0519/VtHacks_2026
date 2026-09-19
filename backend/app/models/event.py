@@ -26,6 +26,7 @@ class EventKind(StrEnum):
 
 
 class ReasonCode(StrEnum):
+    AI_SEMANTIC_QUARANTINE = "AI_SEMANTIC_QUARANTINE"
     # request decisions
     ALLOWED = "ALLOWED"
     IDENTITY_UNVERIFIED = "IDENTITY_UNVERIFIED"  # ANS: not found / revoked / expired / mismatch

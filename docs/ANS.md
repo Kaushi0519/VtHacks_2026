@@ -103,3 +103,5 @@ Confirm on the running `/docs` (Swagger) and fix `reference.py` if needed:
   behavior dimension — Sentinel consumes ANS identity and contributes behavior signal.
 - **Limitation (say it):** we verify the agent's registered state + receipt; we do not yet do full mTLS
   proof-of-possession per request (ANS issues identity certs for exactly this — a strong next step).
+
+Audit hardening: badge names must explicitly match. Stale cache is diagnostic only and cannot authorize; fresh cache still honors its TTL. The verifier parser accepts only the documented exact success line (see `ANALYSIS-AUDIT-FIXES.md`); confirm your deployed version before the live demo.

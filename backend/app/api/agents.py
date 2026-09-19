@@ -65,6 +65,7 @@ async def release_agent(
             agent = _require_agent(db, agent_id)
             changes = quarantine.release(db, agent, utcnow(), c.world.risk_policy, note=cmd.note)
             db.commit()
+            c.analysis.invalidate(agent_id)
     changes.publish(c.broadcaster)
     return changes.agents.get(agent_id, agent)
 

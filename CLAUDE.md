@@ -257,3 +257,5 @@ collide with their work right before judging.
 4. Make the smallest coherent change; run `make test` (and `make smoke` if the flow changed).
 5. Update docs/contracts when interfaces genuinely change; explain major architectural changes.
 6. Correct technically misleading security claims. This project must survive judges' questions.
+
+Security audit follow-up: see `docs/ANALYSIS-AUDIT-FIXES.md` for fixes, tests, and live-validation limits on `security/analysis-audit-fixes`.

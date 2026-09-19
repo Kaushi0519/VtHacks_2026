@@ -31,7 +31,13 @@ Conventions: JSON is **camelCase**; timestamps are UTC ISO-8601; ids are prefixe
 ```
 `decision`: `allow | deny | require_human | quarantine`.
 `reasonCode`: `ALLOWED, IDENTITY_UNVERIFIED, IDENTITY_UNAVAILABLE, AGENT_NOT_ENROLLED, AGENT_QUARANTINED,
-UNKNOWN_RESOURCE, FORBIDDEN_FOR_ROLE, NO_GRANT, GRANT_EXPIRED, GRANT_REVOKED, REQUIRES_HUMAN, RISK_THRESHOLD`
+UNKNOWN_RESOURCE, FORBIDDEN_FOR_ROLE, NO_GRANT, GRANT_EXPIRED, GRANT_REVOKED, REQUIRES_HUMAN, RISK_THRESHOLD, AI_SEMANTIC_QUARANTINE`
+
+`AI_SEMANTIC_QUARANTINE` identifies asynchronous Gemini-triggered quarantine, which can
+occur below the numeric risk threshold. Its quarantine and analysis events preserve the
+score before and after the contribution. Results started before reset or operator release
+are discarded. Unknown callers still receive incident explanations without agent enforcement.
+Incident detail includes its release event.
 (lifecycle events also use `OPERATOR_ACTION, TTL_ELAPSED, IDLE_TIMEOUT, QUARANTINE_CLEANUP, ANALYSIS_COMPLETE`).
 
 ## Dashboard / control plane
@@ -121,3 +127,5 @@ advisory Gemini finding) must not be presented as AI-decided.
 | `POST /scenarios/{id}/run?check=false&ttl_seconds=` | starts in background → `RunState` |
 | `GET /runs`, `GET /runs/{id}` | `RunState {status, stepIndex, totalSteps, caption, results[]}` |
 | `POST /runs/{id}/stop`, `POST /runs/stop-all` | |
+
+World-file validation rejects unknown settings, invalid risk ranges/threshold order, duplicate IDs/prefixes, and invalid role/peer references. These checks do not change the wire fields. ANS stale cached results carry `verified=false`, `stale=true`, and `ansStatus=UNREACHABLE`; they cannot authorize access.
