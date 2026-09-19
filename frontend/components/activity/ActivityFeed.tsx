@@ -6,8 +6,8 @@ import { useSentinel } from "@/lib/store";
 export function ActivityFeed() {
   const { events, agents, selectAgent, selectIncident } = useSentinel();
   return (
-    <aside className="overflow-y-auto border-l border-slate-800 p-3">
-      <h2 className="mb-2 font-mono text-xs tracking-widest text-slate-500">LIVE ACTIVITY</h2>
+    <aside className="panel min-h-0 overflow-y-auto p-3">
+      <h2 className="panel-title mb-2">Live activity</h2>
       <ul className="space-y-1 font-mono text-xs">
         {events.map((e) => {
           const d = e.decision ? decisionStyle[e.decision] : null;

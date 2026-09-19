@@ -28,8 +28,9 @@ its Behavioral Risk Score spikes, and Sentinel quarantines it.
 - **Written but NOT yet verified live:** GoDaddy ANS adapter (`ANS_MODE=real`; needs a PAT and
   registered agents) and the Gemini analyzer (`GEMINI_MODE=real`; needs a key). Both currently run
   as mock / rule-based, and the UI says so.
-- **Bare-bones:** the frontend works but is unstyled; making it a polished mission control is the
-  main frontend work.
+- **Frontend:** F1 done: dark mission-control theme (tokens + `panel`/`glow` utilities in
+  `frontend/app/globals.css`), top-bar status (SECURE / AT RISK / QUARANTINED / OFFLINE), agent cards
+  with threshold risk meters. Graph (F2), inspector (F3), decay UI (F4), accountability (F5) still bare.
 - **Not started:** everything in "Stretch" below.
 - `IDEAS.MD` is the team's original brainstorm. The plan is Sentinel Mesh; the MVP scope below is
   what we build first.

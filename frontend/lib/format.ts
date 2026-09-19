@@ -3,10 +3,18 @@ import type { Decision, RiskLevel } from "@/types/sentinel";
 export const time = (iso: string) => new Date(iso).toLocaleTimeString([], { hour12: false });
 
 export const riskColor: Record<RiskLevel, string> = {
-  low: "text-emerald-400",
-  elevated: "text-amber-300",
-  high: "text-orange-400",
-  critical: "text-red-500",
+  low: "text-ok",
+  elevated: "text-warn",
+  high: "text-high",
+  critical: "text-crit",
+};
+
+// Solid fill for risk meters and status dots.
+export const riskFill: Record<RiskLevel, string> = {
+  low: "bg-ok",
+  elevated: "bg-warn",
+  high: "bg-high",
+  critical: "bg-crit",
 };
 
 export const decisionStyle: Record<Decision, { label: string; icon: string; className: string }> = {
