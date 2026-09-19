@@ -30,10 +30,14 @@ its Behavioral Risk Score spikes, and Sentinel quarantines it.
   New adapter `services/ans/reference.py` (TL badge + `ans-verify` crypto), matches the v2 OpenAPI.
   Still `ANS_MODE=mock` until P3 does S1/S2: build/run the stack, register 5 agents → `world.yaml`,
   validate the 3 `TODO(P3, P0)` in `reference.py`. Full runbook: `docs/ANS.md`.
-- **Gemini verified working live:** `GEMINI_MODE=real` produces real analysis (5/5 incidents
-  `source:"gemini"`). Model is `gemini-flash-lite-latest` (flash-latest 503s under load, 2.5-flash is
-  retired). Needs a free key (aistudio.google.com/apikey) in each person's `.env`; `mock` needs none.
-  Remaining (P3): prompt tuning, 503 retry/pre-cache hardening, and the `AI_ASSESSMENT` risk signal.
+- **Gemini is a real second detector (can quarantine):** `GEMINI_MODE=real`. Two triggers feed the
+  analyzer — incident (a rule fired) and **semantic review** (agent aggregated ≥3 sensitive allowed
+  accesses, no rule fired). Gemini judges the action sequence vs role + `current_task`; severity →
+  bounded score points (Sentinel owns the number); CRITICAL ≥0.85, real-`gemini`-only, triggers
+  quarantine (fallback never enforces). Scenario `subtle_exfiltration` proves it (verified live:
+  severity=critical 0.95 → quarantine, static stayed ALLOW). Model `gemini-flash-lite-latest`
+  (flash-latest 503s under load, 2.5-flash retired); free key per `.env`, `mock` needs none. See
+  ARCHITECTURE §10. Remaining (P3): 503 retry/pre-cache hardening.
 - **Frontend:** F1 done: dark mission-control theme (tokens + `panel`/`glow` utilities in
   `frontend/app/globals.css`), top-bar status (SECURE / AT RISK / QUARANTINED / OFFLINE), agent cards
   with threshold risk meters. F2 done: fixed-layout mesh graph (`components/graph/`) with a packet
