@@ -1,55 +1,85 @@
 "use client";
-// Owner: Person 2. "Which agents have problems, and what kind?"
-import { useEffect, useState } from "react";
-import { api } from "@/lib/api";
+// Owner: Person 2. "Which agents have problems, and what kind?" Worst first.
+import clsx from "clsx";
+import { levelFor, riskColor } from "@/lib/format";
 import { useSentinel } from "@/lib/store";
-import type { AgentActivityRow, FleetOverview, Hypothesis } from "@/types/sentinel";
+import type { ActivityTotals, AgentActivityRow, FleetOverview } from "@/types/sentinel";
+import { HYPOTHESIS } from "./hypotheses";
 
-export const HYPOTHESIS_STYLE: Record<Hypothesis, string> = {
-  possibly_compromised: "bg-red-900 text-red-200",
-  unverified_identity: "bg-fuchsia-900 text-fuchsia-200",
-  likely_misconfigured: "bg-amber-900 text-amber-200",
-  over_privileged: "bg-sky-900 text-sky-200",
-  inactive: "bg-slate-800 text-slate-300",
-  healthy: "bg-emerald-900 text-emerald-200",
-};
+export const sortRows = (o: FleetOverview): AgentActivityRow[] =>
+  [...o.agents, ...o.unknownActors].sort(
+    (a, b) => HYPOTHESIS[a.hypothesis].rank - HYPOTHESIS[b.hypothesis].rank || b.totals.denied - a.totals.denied,
+  );
 
-export function FleetTable({ selected, onSelect }: { selected: string | null; onSelect: (id: string) => void }) {
-  const [data, setData] = useState<FleetOverview | null>(null);
-  const eventCount = useSentinel((s) => s.events.length); // refresh as live traffic arrives
-
-  useEffect(() => {
-    api.overview(7).then(setData).catch(console.error);
-  }, [eventCount]);
-
-  if (!data) return <p className="text-slate-500">Loading history…</p>;
-  const rows: AgentActivityRow[] = [...data.agents, ...data.unknownActors];
+export function FleetSummary({ totals, days }: { totals: ActivityTotals; days: number }) {
+  const tiles: { label: string; value: number; tone?: string }[] = [
+    { label: "Requests", value: totals.requests },
+    { label: "Allowed", value: totals.allowed, tone: "text-ok" },
+    { label: "Denied", value: totals.denied + totals.quarantineDecisions, tone: totals.denied ? "text-crit" : undefined },
+    { label: "Sent to human", value: totals.requireHuman, tone: totals.requireHuman ? "text-warn" : undefined },
+    { label: "Identity failures", value: totals.identityFailures, tone: totals.identityFailures ? "text-fuchsia-300" : undefined },
+    { label: "Incidents", value: totals.incidents, tone: totals.incidents ? "text-high" : undefined },
+    { label: "Quarantines", value: totals.quarantines, tone: totals.quarantines ? "text-crit" : undefined },
+  ];
   return (
-    <section>
-      <h2 className="mb-2 font-mono text-xs tracking-widest text-slate-500">
-        LAST 7 DAYS · {data.totals.requests} REQUESTS · {data.totals.denied} DENIED · {data.totals.incidents} INCIDENTS
-      </h2>
-      <table className="w-full text-sm">
-        <thead className="text-left text-xs text-slate-500">
-          <tr><th>Agent</th><th>Assessment</th><th>Req</th><th>Denied</th><th>Incidents</th><th>Top issue</th></tr>
-        </thead>
-        <tbody>
-          {rows.map((r) => (
-            <tr
-              key={r.agentId}
-              onClick={() => onSelect(r.agentId)}
-              className={`cursor-pointer border-t border-slate-800 hover:bg-slate-900 ${selected === r.agentId ? "bg-slate-900" : ""}`}
-            >
-              <td className="py-2">{r.displayName}{!r.known && <span className="ml-1 text-xs text-fuchsia-300">(unknown)</span>}</td>
-              <td><span className={`rounded px-2 py-0.5 text-xs ${HYPOTHESIS_STYLE[r.hypothesis]}`}>{r.hypothesis.replace(/_/g, " ")}</span></td>
-              <td className="font-mono">{r.totals.requests}</td>
-              <td className="font-mono">{r.totals.denied + r.totals.quarantineDecisions}</td>
-              <td className="font-mono">{r.totals.incidents}</td>
-              <td className="text-xs text-slate-400">{r.findings[0]?.title ?? "-"}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+    <div className="panel flex flex-wrap items-stretch divide-x divide-line">
+      <div className="flex flex-col justify-center px-4 py-3">
+        <span className="panel-title">Accountability</span>
+        <span className="text-sm text-slate-300">Last {days} days, every decision</span>
+      </div>
+      {tiles.map((t) => (
+        <div key={t.label} className="flex min-w-24 flex-1 flex-col justify-center px-4 py-3">
+          <span className={clsx("font-mono text-2xl leading-none font-bold tabular-nums", t.tone ?? "text-slate-100")}>{t.value}</span>
+          <span className="mt-1 text-[11px] text-dim">{t.label}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export function FleetTable({ rows, selected, onSelect }: { rows: AgentActivityRow[]; selected: string | null; onSelect: (id: string) => void }) {
+  const policy = useSentinel((s) => s.system?.riskPolicy);
+  return (
+    <section className="panel flex min-h-0 flex-col">
+      <div className="flex items-baseline justify-between px-3 pt-3 pb-2">
+        <h2 className="panel-title">Fleet</h2>
+        <span className="text-[11px] text-dim">worst first</span>
+      </div>
+      <ul className="min-h-0 flex-1 space-y-1.5 overflow-y-auto px-2 pb-2">
+        {rows.map((r) => {
+          const h = HYPOTHESIS[r.hypothesis];
+          const level = r.riskScore !== null && policy ? levelFor(r.riskScore, policy) : null;
+          return (
+            <li key={r.agentId}>
+              <button
+                onClick={() => onSelect(r.agentId)}
+                className={clsx(
+                  "w-full rounded-md border px-3 py-2 text-left transition-colors",
+                  selected === r.agentId ? "border-accent/50 bg-raised" : "border-transparent hover:border-line hover:bg-raised/60",
+                )}
+              >
+                <div className="flex items-center gap-2">
+                  <span className={clsx("min-w-0 flex-1 truncate text-sm font-medium", r.known ? "text-slate-100" : "font-mono text-crit")}>
+                    {r.known ? r.displayName : `? ${r.displayName}`}
+                  </span>
+                  {r.status === "quarantined" && <span className="font-mono text-[10px] font-bold text-crit">QUARANTINED</span>}
+                  {level && <span className={clsx("font-mono text-sm font-bold tabular-nums", riskColor[level])} title="Current behavioral risk">{r.riskScore}</span>}
+                </div>
+                <div className="mt-1 flex items-center gap-2">
+                  <span className={clsx("rounded border px-1.5 py-px font-mono text-[10px] tracking-wide", h.badge)}>
+                    {h.icon} {h.label.toUpperCase()}
+                  </span>
+                  <span className="ml-auto font-mono text-[10px] text-dim">
+                    {r.totals.requests} req ·{" "}
+                    <span className={r.totals.denied ? "text-crit" : undefined}>{r.totals.denied + r.totals.quarantineDecisions} denied</span>
+                  </span>
+                </div>
+                {r.findings[0] && <p className="mt-1 truncate text-xs text-slate-400">{r.findings[0].title}</p>}
+              </button>
+            </li>
+          );
+        })}
+      </ul>
     </section>
   );
 }

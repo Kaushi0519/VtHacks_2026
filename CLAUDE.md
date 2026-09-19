@@ -42,7 +42,9 @@ its Behavioral Risk Score spikes, and Sentinel quarantines it.
   Identity (ANS) | Behavior (Sentinel) | Why (decision, labeled AI analysis, incident timeline).
   F4 done: permission decay is visible (countdown HUD on the mesh, dashed grant edge with timer,
   ⏱ badge on the agent card, grant cards with revoke in the inspector; red flash + fade on expiry).
-  Accountability page (F5) still bare.
+  F5 done: accountability page (7-day KPI strip, fleet sorted worst-first with hypothesis badges +
+  plain-English meaning, agent report with findings / risk sparkline / denial reasons / scope usage,
+  filterable paged audit log). All frontend P0 tasks (F1–F5) are done; next are the P1 items.
 - **Not started:** everything in "Stretch" below.
 - `IDEAS.MD` is the team's original brainstorm. The plan is Sentinel Mesh; the MVP scope below is
   what we build first.
