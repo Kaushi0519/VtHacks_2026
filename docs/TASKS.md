@@ -13,8 +13,8 @@ Status: ⬜ todo · 🟨 in progress (add your name) · ✅ done. Update it in t
 
 | ID | Task | Owner | Deps | Done when | Files | Status |
 |---|---|---|---|---|---|---|
-| S1 | **Get ANS access + register the 5 agents** (PAT, domain, ACME/DNS). Start hour 0; it has external lead time | P3 | - | `curl` resolution returns ACTIVE for all 5; real names in world.yaml | `world.yaml`, `.env` | ⬜ |
-| S2 | Verify GoDaddy adapter against the live API (auth header, ownership-scoped GET) | P3 | S1 | `ANS_MODE=real`: agents verified, fake agent NOT_FOUND, top bar "ANS LIVE" | `services/ans/godaddy.py` | ⬜ |
+| S1 | **Stand up ANS locally + register the 5 agents** (reference impl, no PAT/DNS lead time). See checklist below | P3 | - | reference stack running; 5 agents ACTIVE; real agentIds in `world.yaml` | `world.yaml` | ⬜ |
+| S2 | **Validate `reference.py` against the live stack** (confirm the 3 TODO assumptions) | P3 | S1 | `ANS_MODE=real`: agents verified, impostor NOT_FOUND, `tlVerified=true`, top bar "ANS LIVE" | `services/ans/reference.py` | ⬜ |
 | S3 | Gemini incident analysis live (key, prompt tuning, timeout) | P3 | - | quarantine incident shows a Gemini reason in <5s; key removed → labeled rule-based | `services/gemini/*` | ⬜ |
 | S4 | Tune signals/weights with Ishan so scenario numbers read well | P3, I | - | `make smoke` passes; risk story reads 8→23→78→quarantine | `behavior/*`, `world.yaml riskPolicy` | ⬜ |
 | B1 | Own the pipeline: review scaffold, decision logs, edge cases (unknown resource, bad scope) | P1 | - | tests for each ReasonCode path | `services/gateway/pipeline.py`, `tests/` | ⬜ |
@@ -30,6 +30,28 @@ Status: ⬜ todo · 🟨 in progress (add your name) · ✅ done. Update it in t
 | I3 | History backfill stories (see file docstring) | I | I1 | overview shows all 5 intended hypotheses | `scenarios/history_backfill.py`, `world.yaml` | ⬜ |
 | I4 | Demo controls: captions/progress from `GET /runs`, keyboard toggle, reset flow | I | - | presenter can run the demo with only this panel | `components/demo/DemoControls.tsx` | ⬜ |
 | I5 | Rehearsal owner: run DEMO.md end-to-end, log every glitch as a task | I | all | 3 clean run-throughs | `docs/DEMO.md` | ⬜ |
+
+### ANS setup checklist (S1 + S2) — full runbook in `docs/ANS.md`
+
+The `reference.py` adapter is written to the ANS v2 spec but has **never run against a live ANS stack**.
+This is the critical path (surprises hide here). It's all local now — no GoDaddy PAT, no public DNS.
+
+**S1 — stand up ANS + register agents** (needs Go 1.26+, openssl, curl, jq):
+- [ ] `git clone github.com/agentnameservice/ans && cd ans && make build`
+- [ ] `scripts/demo/start.sh` → confirm `ans-ra` :18080 and `ans-tl` :18081 respond at `/docs`
+- [ ] register the 5 hospital agents (reference-impl tooling / `run-lifecycle.sh` as a template)
+- [ ] paste each real `agentId` into the matching `ansMockRegistry` entry in `world.yaml`
+- [ ] register 1 impostor agent OR leave it unregistered so it resolves NOT_FOUND
+- [ ] ensure the `ans-verify` binary is on PATH (or set `ANS_VERIFY_BIN`)
+
+**S2 — validate `reference.py` against the live stack** (fix the code if any assumption is wrong):
+- [ ] confirm the TL badge JSON key for lifecycle status (code assumes `status`)
+- [ ] confirm the `ans-verify` success output (code assumes exit 0 + a line containing `VERIFIED`)
+- [ ] set `ANS_MODE=real` in `.env`, restart backend, run `make smoke`
+- [ ] verify: 5 agents `verified=true` + `tlVerified=true`, impostor `NOT_FOUND`, top bar "ANS LIVE"
+- [ ] (optional/P2) swap the world-registry map for real `_ans` DNS TXT resolution via `ans-dns`
+
+Until S1/S2 are done, run everything in `ANS_MODE=mock` — the full demo works on mock.
 
 ## P1: high value
 
