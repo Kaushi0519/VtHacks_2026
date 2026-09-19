@@ -2,8 +2,8 @@
 // Agents are ordered so every peer pair sits next to each other; resources so access edges barely cross.
 // Unknown ids (new agents/resources in world.yaml) are appended below instead of breaking the layout.
 
-export const COLUMN_X = { ghost: 0, agent: 300, resource: 660 } as const;
-export const HEADER_Y = -64;
+export const COLUMN_X = { ghost: 0, agent: 260, resource: 600 } as const;
+export const HEADER_Y = -48;
 
 const AGENT_ORDER = ["facilities-agent", "scheduling-agent", "payroll-agent", "analytics-agent", "database-agent"];
 const RESOURCE_ORDER = [
@@ -16,9 +16,9 @@ const RESOURCE_ORDER = [
   "credential-vault",
 ];
 
-const AGENT_STEP = 128;
-const RESOURCE_STEP = 94;
-const GHOST_STEP = 110;
+const AGENT_STEP = 112;
+const RESOURCE_STEP = 80;
+const GHOST_STEP = 96;
 
 function slot(order: string[], id: string, seen: string[]): number {
   const i = order.indexOf(id);

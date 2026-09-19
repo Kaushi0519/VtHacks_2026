@@ -32,7 +32,9 @@ its Behavioral Risk Score spikes, and Sentinel quarantines it.
   `frontend/app/globals.css`), top-bar status (SECURE / AT RISK / QUARANTINED / OFFLINE), agent cards
   with threshold risk meters. F2 done: fixed-layout mesh graph (`components/graph/`) with a packet
   per decision (green = allowed, red ✕ = blocked), cut links on quarantine, ghost nodes for unverified
-  callers. Inspector (F3), decay UI (F4), accountability (F5) still bare.
+  callers. F3 done: clickable live feed (filters, any decision is explainable) + inspector with
+  Identity (ANS) | Behavior (Sentinel) | Why (decision, labeled AI analysis, incident timeline).
+  Decay UI (F4) and accountability page (F5) still bare.
 - **Not started:** everything in "Stretch" below.
 - `IDEAS.MD` is the team's original brainstorm. The plan is Sentinel Mesh; the MVP scope below is
   what we build first.

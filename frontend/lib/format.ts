@@ -1,4 +1,4 @@
-import type { Decision, RiskLevel } from "@/types/sentinel";
+import type { Decision, RiskLevel, RiskPolicy } from "@/types/sentinel";
 
 export const time = (iso: string) => new Date(iso).toLocaleTimeString([], { hour12: false });
 
@@ -8,6 +8,14 @@ export const riskColor: Record<RiskLevel, string> = {
   high: "text-high",
   critical: "text-crit",
 };
+
+// Mirrors backend level_for() (services/behavior/risk.py), for scores other than the agent's current one.
+export function levelFor(score: number, p: RiskPolicy): RiskLevel {
+  if (score >= p.thresholdCritical) return "critical";
+  if (score >= p.thresholdHigh) return "high";
+  if (score >= p.thresholdElevated) return "elevated";
+  return "low";
+}
 
 // Solid fill for risk meters and status dots.
 export const riskFill: Record<RiskLevel, string> = {

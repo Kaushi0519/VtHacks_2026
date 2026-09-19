@@ -27,12 +27,14 @@ interface SentinelState {
   lastEvent: SentinelEvent | null; // drives graph edge animation
   selectedAgentId: string | null;
   selectedIncidentId: string | null;
+  selectedEventId: string | null; // a single decision to explain in the inspector
 
   setConnected: (v: boolean) => void;
   hydrate: (s: Snapshot) => void;
   apply: (m: StreamMessage) => void;
   selectAgent: (id: string | null) => void;
   selectIncident: (id: string | null) => void;
+  selectEvent: (e: SentinelEvent) => void;
 }
 
 const byId = <T extends { id: string }>(items: T[]) => Object.fromEntries(items.map((x) => [x.id, x]));
@@ -49,6 +51,7 @@ export const useSentinel = create<SentinelState>((set) => ({
   lastEvent: null,
   selectedAgentId: null,
   selectedIncidentId: null,
+  selectedEventId: null,
 
   setConnected: (connected) => set({ connected }),
 
@@ -81,6 +84,13 @@ export const useSentinel = create<SentinelState>((set) => ({
       }
     }),
 
-  selectAgent: (selectedAgentId) => set({ selectedAgentId, selectedIncidentId: null }),
-  selectIncident: (selectedIncidentId) => set({ selectedIncidentId }),
+  selectAgent: (selectedAgentId) => set({ selectedAgentId, selectedIncidentId: null, selectedEventId: null }),
+  selectIncident: (selectedIncidentId) => set({ selectedIncidentId, selectedEventId: null }),
+  // Unknown actors (fake agents) have no Agent record; the inspector then works from the event alone.
+  selectEvent: (e) =>
+    set((st) => ({
+      selectedEventId: e.id,
+      selectedIncidentId: e.incidentId,
+      selectedAgentId: st.agents[e.actorAgentId] ? e.actorAgentId : null,
+    })),
 }));
