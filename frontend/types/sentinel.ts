@@ -115,8 +115,18 @@ export type ReasonCode =
   | "QUARANTINE_CLEANUP"
   | "ANALYSIS_COMPLETE";
 
+export type SignalCode =
+  | "FORBIDDEN_SCOPE"
+  | "NEW_SENSITIVE_RESOURCE"
+  | "RATE_SPIKE"
+  | "UNEXPECTED_PEER"
+  | "REPEATED_DENIALS"
+  | "EXPIRED_GRANT_USE"
+  | "HONEYPOT_ACCESS"
+  | "AI_ASSESSMENT";
+
 export interface RiskSignal {
-  code: string; // FORBIDDEN_SCOPE | NEW_SENSITIVE_RESOURCE | RATE_SPIKE | UNEXPECTED_PEER | ...
+  code: SignalCode;
   weight: number;
   detail: string;
 }
@@ -147,8 +157,18 @@ export interface SentinelEvent {
   metadata: Record<string, unknown> & { backfill?: boolean; source?: string };
 }
 
+export type AnomalyType =
+  | "role_resource_mismatch"
+  | "privilege_escalation"
+  | "rate_anomaly"
+  | "unusual_peer"
+  | "expired_access_reuse"
+  | "identity_failure"
+  | "benign"
+  | "other";
+
 export interface BehaviorAnalysis {
-  anomalyType: string;
+  anomalyType: AnomalyType;
   severity: Severity;
   confidence: number;
   reason: string;
