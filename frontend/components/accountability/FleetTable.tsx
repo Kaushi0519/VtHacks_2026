@@ -43,12 +43,15 @@ export function FleetTable({ rows, selected, onSelect }: { rows: AgentActivityRo
     <section className="panel flex min-h-0 flex-col">
       <div className="flex items-baseline justify-between px-3 pt-3 pb-2">
         <h2 className="panel-title">Fleet</h2>
-        <span className="text-[11px] text-dim">worst first</span>
+        <span className="text-[11px] text-dim">worst first · peak risk</span>
       </div>
       <ul className="min-h-0 flex-1 space-y-1.5 overflow-y-auto px-2 pb-2">
         {rows.map((r) => {
           const h = HYPOTHESIS[r.hypothesis];
-          const level = r.riskScore !== null && policy ? levelFor(r.riskScore, policy) : null;
+          // Peak, not live: the live score cools back toward baseline, so an agent that spiked to 78
+          // and behaved since would read as a harmless 7 next to findings describing the spike.
+          const peak = r.peakRisk ?? r.riskScore;
+          const level = peak !== null && policy ? levelFor(peak, policy) : null;
           return (
             <li key={r.agentId}>
               <button
@@ -63,7 +66,11 @@ export function FleetTable({ rows, selected, onSelect }: { rows: AgentActivityRo
                     {r.known ? r.displayName : `? ${r.displayName}`}
                   </span>
                   {r.status === "quarantined" && <span className="font-mono text-[10px] font-bold text-crit">QUARANTINED</span>}
-                  {level && <span className={clsx("font-mono text-sm font-bold tabular-nums", riskColor[level])} title="Current behavioral risk">{r.riskScore}</span>}
+                  {level && (
+                    <span className={clsx("font-mono text-sm font-bold tabular-nums", riskColor[level])} title={`Peak Behavioral Risk Score in this window (now ${r.riskScore ?? "?"})`}>
+                      {peak}
+                    </span>
+                  )}
                 </div>
                 <div className="mt-1 flex items-center gap-2">
                   <span className={clsx("rounded border px-1.5 py-px font-mono text-[10px] tracking-wide", h.badge)}>

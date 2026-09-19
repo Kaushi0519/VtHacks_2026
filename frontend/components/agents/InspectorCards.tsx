@@ -121,14 +121,46 @@ const severityText: Record<Severity, string> = {
 };
 
 // Did Gemini itself cause this quarantine, or did a deterministic rule? Both end as an isolated
-// agent with a Gemini analysis attached, so we only claim "AI-triggered" when the quarantine event
-// the backend stored says Gemini caused it. Under-claiming is the safe direction: if this misses,
-// the box falls back to calling the analysis advisory, which is never a false security claim.
+// agent with a Gemini analysis attached, so the structured fields alone would mislabel a
+// rule-triggered quarantine that happens to carry a Gemini analysis recommending one. We require
+// the structured fields AND, when we have the quarantine event, its stored reason — the backend
+// writes "Gemini semantic analysis flagged…" only on the AI path. Under-claiming is the safe
+// direction: a miss downgrades the box to "advisory", never to a false security claim.
+function quarantineEventFor(incident: Incident, events: SentinelEvent[]): SentinelEvent | null {
+  return events.find((e) => e.kind === "quarantine" && e.incidentId === incident.id)
+    ?? events.find((e) => e.kind === "quarantine")
+    ?? null;
+}
+
 function aiTriggeredQuarantine(incident: Incident, events: SentinelEvent[]): boolean {
-  if (!incident.quarantined || incident.analysis?.source !== "gemini") return false;
-  const q = events.find((e) => e.kind === "quarantine" && e.incidentId === incident.id)
-    ?? events.find((e) => e.kind === "quarantine");
-  return Boolean(q?.reason?.includes("Gemini"));
+  const a = incident.analysis;
+  if (!incident.quarantined || a?.source !== "gemini") return false;
+  if (a.recommendedAction !== "quarantine" || a.severity !== "critical") return false;
+  const q = quarantineEventFor(incident, events);
+  return q ? Boolean(q.reason?.includes("Gemini")) : true;
+}
+
+// What the deterministic half of Sentinel saw in the requests leading up to this finding. Scoped to
+// the events we actually hold and labeled with that count, so "clean" is a checkable claim about a
+// stated window rather than a blanket assertion.
+function staticChecks(agentId: string, events: SentinelEvent[], until: string) {
+  const reqs = events
+    .filter((e) => e.kind === "request" && e.actorAgentId === agentId && e.timestamp <= until)
+    .slice(0, 25);
+  return {
+    n: reqs.length,
+    identity: reqs.every((e) => e.identity?.verified !== false),
+    permissions: reqs.every((e) => e.decision === "allow"),
+    noRule: reqs.every((e) => e.signals.length === 0),
+  };
+}
+
+function Check({ ok, children }: { ok: boolean; children: React.ReactNode }) {
+  return (
+    <span className={ok ? "text-ok" : "text-crit"}>
+      {ok ? "✓" : "✕"} {children}
+    </span>
+  );
 }
 
 // A semantic review that fires with no rule behind it opens no incident, so its analysis lives only
@@ -143,6 +175,7 @@ export function AnalysisBox({
   event?: SentinelEvent | null;
   events?: SentinelEvent[];
 }) {
+  const feed = useSentinel((s) => s.events);
   const fromEvent = event?.kind === "analysis" ? (event.metadata.analysis as BehaviorAnalysis | undefined) ?? null : null;
   const a = incident?.analysis ?? fromEvent;
   if (!a) {
@@ -155,10 +188,12 @@ export function AnalysisBox({
   }
   const gemini = a.source === "gemini";
   const aiQuarantine = incident ? aiTriggeredQuarantine(incident, events) : false;
-  // What the deterministic half of Sentinel saw. No signal codes means no rule fired: the whole
-  // point of step 5d is that every individual request was permitted.
+  const quarantineReason = incident && aiQuarantine ? quarantineEventFor(incident, events)?.reason : null;
+  const agentId = incident?.agentId ?? event?.actorAgentId ?? null;
+  // Two views of the deterministic half: the checks it ran on the recent requests (what makes
+  // "every one of these was allowed" checkable), and the incident's own signal codes.
+  const checks = agentId ? staticChecks(agentId, feed, a.analyzedAt) : null;
   const signalCodes = incident?.signalCodes ?? [];
-  const staticVerdict = signalCodes.length === 0 ? "no violation" : signalCodes.join(", ");
 
   return (
     <div className={clsx("mb-2 rounded border px-2 py-1.5", aiQuarantine ? "border-crit/50 bg-crit/10" : "border-accent/25 bg-accent/5")}>
@@ -173,10 +208,25 @@ export function AnalysisBox({
       </div>
 
       {/* The two detectors, side by side. This is the claim step 5d is built on. */}
-      <p className="mb-1 font-mono text-[10px] tracking-wider">
-        <span className="text-dim">STATIC POLICY: </span>
-        <span className={signalCodes.length === 0 ? "text-ok" : "text-high"}>{staticVerdict}</span>
-      </p>
+      <div className="mb-1 font-mono text-[10px] tracking-wider">
+        <span className="text-dim">STATIC POLICY</span>
+        {checks && checks.n > 0 ? (
+          <>
+            <span className="text-dim"> · last {checks.n} req </span>
+            <span className="inline-flex flex-wrap gap-x-2">
+              <Check ok={checks.identity}>identity</Check>
+              <Check ok={checks.permissions && signalCodes.length === 0}>permissions</Check>
+              <Check ok={checks.noRule && signalCodes.length === 0}>
+                {signalCodes.length === 0 ? "no rule violated" : signalCodes.join(", ")}
+              </Check>
+            </span>
+          </>
+        ) : (
+          <span className={signalCodes.length === 0 ? "text-ok" : "text-high"}>
+            : {signalCodes.length === 0 ? "no violation" : signalCodes.join(", ")}
+          </span>
+        )}
+      </div>
 
       {a.violations.length > 0 && (
         <p className="mb-1 flex flex-wrap gap-1">
@@ -192,6 +242,7 @@ export function AnalysisBox({
         <p className="mt-1 text-[10px] text-crit">
           AI-TRIGGERED QUARANTINE · Gemini&apos;s finding caused this isolation. Sentinel enforces it only for real
           Gemini analysis rated CRITICAL at high confidence; the rule-based fallback never enforces.
+          {quarantineReason && <span className="mt-0.5 block text-slate-300">{quarantineReason}</span>}
         </p>
       ) : gemini ? (
         <p className="mt-1 text-[10px] text-dim">

@@ -81,7 +81,12 @@ export function AgentReportPanel({ agentId, days, version }: { agentId: string; 
 
       {report.known && (
         <div>
-          <h3 className="panel-title mb-1">Behavioral risk · {days} days</h3>
+          <h3 className="panel-title mb-1">
+            Behavioral risk · {days} days
+            {report.peakRisk !== null && (
+              <span className="ml-2 font-mono text-[11px] text-high">peak {report.peakRisk}</span>
+            )}
+          </h3>
           <RiskSparkline points={report.riskHistory} start={report.windowStart} end={report.windowEnd} policy={policy} />
         </div>
       )}

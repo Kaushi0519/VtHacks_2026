@@ -108,6 +108,14 @@ function Subject({ agent, actorId, incident }: { agent: Agent | null; actorId: s
         <>
           <p className="text-lg leading-tight font-semibold text-slate-100">{agent.displayName}</p>
           <p className="font-mono text-[11px] text-dim">{agent.role} · {agent.id}</p>
+          {agent.currentTask && (
+            // What the agent is SUPPOSED to be doing. Gemini judges its behavior against this, so
+            // showing it is what makes "inconsistent with its task" a checkable claim, not a vibe.
+            <p className="mt-1 rounded border border-line bg-raised/60 px-1.5 py-1 text-[11px] text-slate-300">
+              <span className="font-mono text-[10px] tracking-wider text-dim">ASSIGNED TASK </span>
+              {agent.currentTask}
+            </p>
+          )}
           <p className={clsx("mt-1.5 font-mono text-xs font-bold tracking-wider", quarantined ? "text-crit" : "text-ok")}>
             {quarantined ? "⛔ QUARANTINED" : "● ACTIVE"}
           </p>
