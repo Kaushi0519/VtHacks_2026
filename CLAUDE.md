@@ -30,7 +30,9 @@ its Behavioral Risk Score spikes, and Sentinel quarantines it.
   as mock / rule-based, and the UI says so.
 - **Frontend:** F1 done: dark mission-control theme (tokens + `panel`/`glow` utilities in
   `frontend/app/globals.css`), top-bar status (SECURE / AT RISK / QUARANTINED / OFFLINE), agent cards
-  with threshold risk meters. Graph (F2), inspector (F3), decay UI (F4), accountability (F5) still bare.
+  with threshold risk meters. F2 done: fixed-layout mesh graph (`components/graph/`) with a packet
+  per decision (green = allowed, red ✕ = blocked), cut links on quarantine, ghost nodes for unverified
+  callers. Inspector (F3), decay UI (F4), accountability (F5) still bare.
 - **Not started:** everything in "Stretch" below.
 - `IDEAS.MD` is the team's original brainstorm. The plan is Sentinel Mesh; the MVP scope below is
   what we build first.

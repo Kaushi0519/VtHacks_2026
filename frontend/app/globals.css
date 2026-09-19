@@ -79,3 +79,36 @@ body {
 .react-flow {
   --xy-background-color: transparent;
 }
+
+/* Mesh graph packets (components/graph/edges.tsx). Durations must fit inside PULSE_MS (1.6s). */
+@keyframes packet-fade {
+  0%, 60% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+@keyframes packet-trail {
+  0% { stroke-opacity: 0.55; }
+  100% { stroke-opacity: 0; }
+}
+
+@keyframes packet-block {
+  0% { opacity: 0; transform: scale(0.2); }
+  60% { opacity: 1; transform: scale(1.25); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+.packet {
+  animation: packet-fade 1.6s ease-out forwards;
+}
+
+.packet-trail {
+  animation: packet-trail 1.2s ease-out forwards;
+}
+
+/* Inner <g> so the CSS scale doesn't fight the translate() attribute on the outer one. */
+.packet-block > * {
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: packet-block 0.35s ease-out 0.5s forwards;
+}
