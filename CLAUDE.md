@@ -184,6 +184,20 @@ git branch -d <area>/<feature>
 - Never force-push `main`. Never commit `.env` or keys.
 - Near demo time: main is frozen; only the team lead merges.
 
+## When a teammate tells you their role
+
+If someone says who they are ("I'm Person 2 / frontend", "I'm Ishan", "backend", "security"):
+1. Run `git status` and `git fetch`. Tell them if they're behind `main` or sitting on an old branch,
+   and give the exact commands to get current.
+2. Confirm their role from "Repo map & ownership" above: what they own, and which shared files
+   need care.
+3. Read `docs/TASKS.md` and show their P0 tasks with status, then their P1 tasks. Recommend the next
+   unblocked task (check Deps and the integration order), and say what "done" means for it.
+4. Give the exact branch command (`git checkout main && git pull --rebase && git checkout -b <area>/<task>`)
+   and the files they'll touch.
+5. Offer to start. When work begins, mark the task 🟨 with their name in `docs/TASKS.md`; mark ✅ when done
+   and update "Current status" above.
+
 ## How Claude should work here
 
 1. Read this file; find which module/contract owns the behavior.
