@@ -60,9 +60,14 @@ function AgentCard({ agent: a, policy, selected, onSelect }: { agent: Agent; pol
           <span className={riskColor[a.riskLevel]}>{a.riskLevel.toUpperCase()}</span>
         )}
         <TempAccessBadge agentId={a.id} />
-        <span className="ml-auto" title={a.identity?.detail ?? a.ansName}>
+        <span
+          className="ml-auto"
+          title={a.identity?.detail ?? (a.identity ? a.ansName : `${a.ansName} — identity is resolved on this agent's first request`)}
+        >
           {!a.identity ? (
-            <span className="text-dim">ANS ?</span>
+            // Not "?": a bare question mark next to four idle agents reads as a broken registry.
+            // Identity is resolved lazily, on the agent's first request, so say that instead.
+            <span className="text-dim">ANS PENDING</span>
           ) : verified ? (
             <span className="text-ok">ANS ✓{a.identity.source === "mock" && <span className="text-dim"> mock</span>}</span>
           ) : (

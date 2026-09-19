@@ -3,7 +3,7 @@
 // Every gateway decision fires a packet (green = allowed, red ✕ = blocked at Sentinel).
 // Quarantined agents turn red and their links are cut. Unknown actors appear as ghost nodes.
 // Live just-in-time grants draw as dashed edges with a countdown (big timer lives in the agent sidebar).
-import { Background, ReactFlow, ReactFlowProvider, useReactFlow, type Edge, type Node } from "@xyflow/react";
+import { Background, ReactFlow, ReactFlowProvider, useReactFlow, type CoordinateExtent, type Edge, type Node } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { useEffect, useMemo, useRef } from "react";
 import { isOnStage, isTemporary, resourceForScope } from "@/lib/grants";
@@ -19,6 +19,9 @@ import { usePulses, type Pulse } from "./usePulses";
 const FIT = { padding: 0.06, maxZoom: 1.3 };
 // Unknown callers stay in the "unverified callers" column this long after their last incident.
 const GHOST_WINDOW_MS = 15 * 60_000;
+// Node footprints, for the pan bounds (see `extent`). Widest node is the 210px resource card.
+const NODE_W = 210;
+const NODE_H = 80;
 
 export function AgentMesh() {
   return (
@@ -145,6 +148,19 @@ function Mesh() {
     return [...mesh, ...grantEdges, ...packets];
   }, [graph, agents, resources, ghosts, pulses, grants, stagedGrants, selectedAgentId]);
 
+  // Bound the drag so the mesh can never be pulled off screen. Derived from the nodes' own box, so
+  // it grows with the tenant; the margin is deliberately loose enough to inspect one corner.
+  const extent = useMemo<CoordinateExtent | undefined>(() => {
+    if (nodes.length === 0) return undefined;
+    const xs = nodes.map((n) => n.position.x);
+    const ys = nodes.map((n) => n.position.y);
+    const M = 320; // roughly one node column of slack on every side
+    return [
+      [Math.min(...xs) - M, Math.min(...ys) + HEADER_Y - M],
+      [Math.max(...xs) + NODE_W + M, Math.max(...ys) + NODE_H + M],
+    ];
+  }, [nodes]);
+
   return (
     <div className="flex h-full min-h-0 flex-col">
       <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1 px-3 pt-3 pb-1">
@@ -166,9 +182,17 @@ function Mesh() {
           zoomOnScroll={false}
           onNodeClick={(_, n) => n.type === "agent" && selectAgent(n.id)}
           onPaneClick={() => selectAgent(null)}
+          translateExtent={extent}
         >
           <Background color={INK.line} gap={22} size={1} />
         </ReactFlow>
+        <button
+          onClick={() => fitView(FIT)}
+          title="Recenter the mesh"
+          className="absolute top-2 right-2 z-10 rounded border border-line bg-panel/90 px-2 py-1 font-mono text-[10px] tracking-wider text-dim transition-colors hover:bg-raised hover:text-slate-200"
+        >
+          ⌖ RECENTER
+        </button>
       </div>
     </div>
   );
