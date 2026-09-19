@@ -3,7 +3,7 @@
 import clsx from "clsx";
 import { useState } from "react";
 import { api } from "@/lib/api";
-import { time } from "@/lib/format";
+import { actionError, time } from "@/lib/format";
 import { barColor, countdownLabel, endLabel, isOnStage, isTemporary, remainingFraction } from "@/lib/grants";
 import { useSentinel } from "@/lib/store";
 import { useNow } from "@/lib/useNow";
@@ -28,6 +28,7 @@ export function GrantList({ agentId }: { agentId: string }) {
 
 function GrantRow({ g, now }: { g: PermissionGrant; now: number }) {
   const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const active = g.status === "active";
   const frac = remainingFraction(g, now);
   return (
@@ -54,7 +55,11 @@ function GrantRow({ g, now }: { g: PermissionGrant; now: number }) {
             disabled={busy}
             onClick={() => {
               setBusy(true);
-              api.revokeGrant(g.id).finally(() => setBusy(false));
+              setError(null);
+              api
+                .revokeGrant(g.id)
+                .catch((e) => setError(actionError(e)))
+                .finally(() => setBusy(false));
             }}
             className="shrink-0 rounded border border-crit/40 px-1.5 font-mono text-crit hover:bg-crit/10 disabled:opacity-50"
           >
@@ -62,6 +67,7 @@ function GrantRow({ g, now }: { g: PermissionGrant; now: number }) {
           </button>
         )}
       </div>
+      {error && <p className="mt-1 text-[10px] text-crit">{error}</p>}
     </li>
   );
 }

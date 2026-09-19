@@ -23,7 +23,15 @@ export function EventExplorer({ agentId, agentName, version }: { agentId: string
     let live = true;
     api
       .events(JSON.parse(key))
-      .then((p) => live && setPage({ key, items: p.items, next: p.nextBeforeSeq }))
+      .then((p) => {
+        if (!live) return;
+        // Same filters: keep pages already loaded with "Load older", just add what's new on top.
+        setPage((prev) => {
+          if (prev?.key !== key || prev.items.length <= p.items.length) return { key, items: p.items, next: p.nextBeforeSeq };
+          const newestKept = prev.items[0]?.seq ?? -1;
+          return { ...prev, items: [...p.items.filter((e) => e.seq > newestKept), ...prev.items] };
+        });
+      })
       .catch(console.error);
     return () => {
       live = false;
@@ -32,7 +40,10 @@ export function EventExplorer({ agentId, agentName, version }: { agentId: string
 
   const loadMore = () => {
     if (!page?.next) return;
-    api.events({ ...filters, beforeSeq: page.next }).then((p) => setPage({ key, items: [...page.items, ...p.items], next: p.nextBeforeSeq }));
+    api
+      .events({ ...filters, beforeSeq: page.next })
+      .then((p) => setPage((prev) => (prev?.key === key ? { key, items: [...prev.items, ...p.items], next: p.nextBeforeSeq } : prev)))
+      .catch(console.error);
   };
 
   const items = page?.key === key ? page.items : [];

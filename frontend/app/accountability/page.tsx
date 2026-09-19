@@ -17,15 +17,25 @@ export default function AccountabilityPage() {
   useSentinelStream();
   const [chosen, setChosen] = useState<string | null>(null);
   const [overview, setOverview] = useState<FleetOverview | null>(null);
+  const [failed, setFailed] = useState(false);
+  const connected = useSentinel((s) => s.connected);
   const version = useRefreshVersion();
 
+  // Also refetches when the stream reconnects, so a backend restart recovers on its own.
   useEffect(() => {
     let live = true;
-    api.overview(DAYS).then((o) => live && setOverview(o)).catch(console.error);
+    api
+      .overview(DAYS)
+      .then((o) => {
+        if (!live) return;
+        setOverview(o);
+        setFailed(false);
+      })
+      .catch(() => live && setFailed(true));
     return () => {
       live = false;
     };
-  }, [version]);
+  }, [version, connected]);
 
   const rows = overview ? sortRows(overview) : [];
   // Default to the most concerning agent so the page never opens empty.
@@ -36,7 +46,11 @@ export default function AccountabilityPage() {
     <div className="flex h-screen flex-col">
       <TopBar />
       {!overview ? (
-        <p className="p-6 text-sm text-dim">Loading history… (empty? use &quot;Seed history&quot; on Mission Control)</p>
+        <p className="p-6 text-sm text-dim">
+          {failed
+            ? "Backend unreachable. Start it with `make backend`; this page reconnects on its own."
+            : "Loading history… (empty? use \"Seed history\" on Mission Control)"}
+        </p>
       ) : (
         <main className="flex min-h-0 flex-1 flex-col gap-3 p-3">
           <FleetSummary totals={overview.totals} days={DAYS} />

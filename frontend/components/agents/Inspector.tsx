@@ -4,7 +4,7 @@
 import clsx from "clsx";
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
-import { decisionStyle, time } from "@/lib/format";
+import { actionError, decisionStyle, time } from "@/lib/format";
 import { useSentinel } from "@/lib/store";
 import type { Agent, Incident, SentinelEvent } from "@/types/sentinel";
 import { GrantList } from "@/components/permissions/GrantList";
@@ -112,21 +112,28 @@ function Subject({ agent, actorId, incident }: { agent: Agent | null; actorId: s
 
 function OperatorActions({ agentId, quarantined }: { agentId: string; quarantined: boolean }) {
   const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const run = (fn: () => Promise<unknown>) => {
     setBusy(true);
-    fn().finally(() => setBusy(false));
+    setError(null);
+    fn()
+      .catch((e) => setError(actionError(e)))
+      .finally(() => setBusy(false));
   };
   return (
-    <button
-      disabled={busy}
-      onClick={() => run(() => (quarantined ? api.release(agentId) : api.quarantine(agentId)))}
-      className={clsx(
-        "mt-2 rounded border px-2.5 py-1 font-mono text-[11px] font-bold tracking-wider transition-colors disabled:opacity-50",
-        quarantined ? "border-ok/50 text-ok hover:bg-ok/10" : "border-crit/50 text-crit hover:bg-crit/10",
-      )}
-    >
-      {quarantined ? "RELEASE AFTER REVIEW" : "QUARANTINE NOW"}
-    </button>
+    <>
+      <button
+        disabled={busy}
+        onClick={() => run(() => (quarantined ? api.release(agentId) : api.quarantine(agentId)))}
+        className={clsx(
+          "mt-2 rounded border px-2.5 py-1 font-mono text-[11px] font-bold tracking-wider transition-colors disabled:opacity-50",
+          quarantined ? "border-ok/50 text-ok hover:bg-ok/10" : "border-crit/50 text-crit hover:bg-crit/10",
+        )}
+      >
+        {quarantined ? "RELEASE AFTER REVIEW" : "QUARANTINE NOW"}
+      </button>
+      {error && <p className="mt-1 text-[10px] text-crit">{error}</p>}
+    </>
   );
 }
 

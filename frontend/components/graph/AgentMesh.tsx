@@ -164,9 +164,11 @@ function route(source: string, target: string, isAgent: (id: string) => boolean)
   return { source, target, sourceHandle: agentToAgent ? "peer-out" : "out", targetHandle: "in" };
 }
 
+// Sources: agents or ghosts (ghosts only have an outgoing handle). Targets: agents or resources.
 function nodeExists(p: Pulse, agents: Record<string, unknown>, resources: { id: string }[], ghosts: { actorId: string }[]) {
-  const known = (id: string) => Boolean(agents[id]) || resources.some((r) => r.id === id) || ghosts.some((g) => g.actorId === id);
-  return known(p.source) && known(p.target);
+  const source = Boolean(agents[p.source]) || ghosts.some((g) => g.actorId === p.source);
+  const target = Boolean(agents[p.target]) || resources.some((r) => r.id === p.target);
+  return source && target;
 }
 
 function Legend() {
