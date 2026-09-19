@@ -15,8 +15,12 @@ import type {
 export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 export const SIM_URL = process.env.NEXT_PUBLIC_SIM_URL ?? "http://localhost:8001";
 
+// A hung backend (accepting connections but never answering) must fail, not spin forever.
+const TIMEOUT_MS = 10_000;
+
 async function call<T>(base: string, path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${base}${path}`, {
+    signal: AbortSignal.timeout(TIMEOUT_MS),
     ...init,
     headers: { "Content-Type": "application/json", ...init?.headers },
     cache: "no-store",
