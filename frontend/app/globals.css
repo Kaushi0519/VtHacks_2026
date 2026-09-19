@@ -122,3 +122,33 @@ body {
 .feed-row {
   animation: feed-in 0.5s ease-out;
 }
+
+/* A just-in-time grant that just decayed: flash red, then fade out (ENDED_VISIBLE_MS = 6s). */
+@keyframes decay-ended {
+  0% { background-color: rgb(244 63 94 / 0.35); transform: scale(1.02); }
+  15% { background-color: rgb(244 63 94 / 0.12); transform: scale(1); }
+  75% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+.decay-ended {
+  animation: decay-ended 6s ease-out forwards;
+}
+
+/* Temporary-grant edge on the mesh: marching dashes while live. */
+@keyframes grant-march {
+  to { stroke-dashoffset: -20; }
+}
+
+.grant-live {
+  animation: grant-march 1s linear infinite;
+}
+
+@keyframes grant-ended {
+  0%, 60% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+.grant-ended {
+  animation: grant-ended 6s ease-out forwards;
+}

@@ -4,9 +4,10 @@
 import clsx from "clsx";
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
-import { decisionStyle, secondsLeft, time } from "@/lib/format";
+import { decisionStyle, time } from "@/lib/format";
 import { useSentinel } from "@/lib/store";
 import type { Agent, Incident, SentinelEvent } from "@/types/sentinel";
+import { GrantList } from "@/components/permissions/GrantList";
 import { AnalysisBox, BehaviorCard, IdentityCard, Section } from "./InspectorCards";
 
 export function Inspector() {
@@ -97,7 +98,7 @@ function Subject({ agent, actorId, incident }: { agent: Agent | null; actorId: s
             {quarantined ? "⛔ QUARANTINED" : "● ACTIVE"}
           </p>
           <OperatorActions agentId={agent.id} quarantined={quarantined} />
-          <TempGrants agentId={agent.id} />
+          <GrantList agentId={agent.id} />
         </>
       ) : (
         <>
@@ -126,27 +127,6 @@ function OperatorActions({ agentId, quarantined }: { agentId: string; quarantine
     >
       {quarantined ? "RELEASE AFTER REVIEW" : "QUARANTINE NOW"}
     </button>
-  );
-}
-
-// Minimal list; F4 turns this into the countdown/decay UI.
-function TempGrants({ agentId }: { agentId: string }) {
-  const grants = useSentinel((s) => s.grants);
-  const [now, setNow] = useState(() => Date.now());
-  useEffect(() => {
-    const t = setInterval(() => setNow(Date.now()), 500);
-    return () => clearInterval(t);
-  }, []);
-  const temp = Object.values(grants).filter((g) => g.agentId === agentId && g.kind === "temporary" && g.status === "active");
-  if (temp.length === 0) return null;
-  return (
-    <ul className="mt-2 space-y-0.5 font-mono text-[10px]">
-      {temp.map((g) => (
-        <li key={g.id} className="text-accent">
-          ⏱ {g.scope} · {secondsLeft(g.expiresAt, now)}s
-        </li>
-      ))}
-    </ul>
   );
 }
 

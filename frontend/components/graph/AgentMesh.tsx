@@ -2,12 +2,15 @@
 // Owner: Person 2. The live agent mesh: unverified callers | agents | resources.
 // Every gateway decision fires a packet (green = allowed, red ✕ = blocked at Sentinel).
 // Quarantined agents turn red and their links are cut. Unknown actors appear as ghost nodes.
-// TODO(F4): dashed edges for active temporary grants.
+// Live just-in-time grants draw as dashed edges with a countdown (plus the DecayHud overlay).
 import { Background, ReactFlow, ReactFlowProvider, useReactFlow, type Edge, type Node } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { useEffect, useMemo, useRef } from "react";
+import { DecayHud } from "@/components/permissions/DecayHud";
+import { isOnStage, isTemporary, resourceForScope } from "@/lib/grants";
 import { useSentinel } from "@/lib/store";
-import { edgeTypes, type MeshEdgeData, type PacketEdgeData } from "./edges";
+import { useNow } from "@/lib/useNow";
+import { edgeTypes, type GrantEdgeData, type MeshEdgeData, type PacketEdgeData } from "./edges";
 import { agentPosition, COLUMN_X, ghostPosition, HEADER_Y, INK, resourcePosition } from "./layout";
 import { nodeTypes } from "./nodes";
 import { usePulses, type Pulse } from "./usePulses";
@@ -23,8 +26,14 @@ export function AgentMesh() {
 }
 
 function Mesh() {
-  const { graph, agents, resources, events, selectedAgentId, selectAgent } = useSentinel();
+  const { graph, agents, resources, events, grants, selectedAgentId, selectAgent } = useSentinel();
   const pulses = usePulses();
+  const now = useNow();
+  // Edges only change when a grant appears or finishes fading out, not on every clock tick.
+  const stagedGrants = Object.values(grants)
+    .filter((g) => isTemporary(g) && isOnStage(g, now) && agents[g.agentId])
+    .map((g) => g.id)
+    .join(",");
   const wrapper = useRef<HTMLDivElement>(null);
   const { fitView } = useReactFlow();
 
@@ -116,8 +125,14 @@ function Mesh() {
       .filter((p) => nodeExists(p, agents, resources, ghosts))
       .map((p) => ({ id: `packet-${p.id}`, type: "packet", data: { decision: p.decision }, zIndex: 10, ...route(p.source, p.target, isAgent) }));
 
-    return [...mesh, ...packets];
-  }, [graph, agents, resources, ghosts, pulses, selectedAgentId]);
+    const grantEdges: Edge<GrantEdgeData>[] = (stagedGrants ? stagedGrants.split(",") : []).flatMap((id) => {
+      const g = grants[id];
+      const r = g && resourceForScope(g.scope, resources);
+      return r ? [{ id: `grant-${id}`, type: "grant", data: { grantId: id }, zIndex: 5, ...route(g.agentId, r.id, isAgent) }] : [];
+    });
+
+    return [...mesh, ...grantEdges, ...packets];
+  }, [graph, agents, resources, ghosts, pulses, grants, stagedGrants, selectedAgentId]);
 
   return (
     <div ref={wrapper} className="relative h-full min-h-0">
@@ -138,6 +153,7 @@ function Mesh() {
         <Background color={INK.line} gap={22} size={1} />
       </ReactFlow>
       <Legend />
+      <DecayHud />
     </div>
   );
 }
@@ -164,6 +180,9 @@ function Legend() {
       </span>
       <span className="flex items-center gap-1.5">
         <span className="w-4 border-t border-dashed border-crit" /> ISOLATED
+      </span>
+      <span className="flex items-center gap-1.5">
+        <span className="w-4 border-t-2 border-dashed border-accent" /> TEMPORARY ACCESS
       </span>
     </div>
   );

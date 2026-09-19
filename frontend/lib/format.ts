@@ -31,7 +31,3 @@ export const decisionStyle: Record<Decision, { label: string; icon: string; clas
   require_human: { label: "REVIEW", icon: "⚠", className: "text-amber-300" },
   quarantine: { label: "QUARANTINE", icon: "⛔", className: "text-fuchsia-400" },
 };
-
-export function secondsLeft(expiresAt: string | null, now: number): number | null {
-  return expiresAt ? Math.max(0, Math.round((new Date(expiresAt).getTime() - now) / 1000)) : null;
-}

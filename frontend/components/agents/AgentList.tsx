@@ -2,7 +2,9 @@
 // Owner: Person 2. One card per agent: identity (ANS) and behavior (risk meter) shown separately.
 import clsx from "clsx";
 import { riskColor, riskFill } from "@/lib/format";
+import { countdownLabel, isTemporary } from "@/lib/grants";
 import { useSentinel } from "@/lib/store";
+import { useNow } from "@/lib/useNow";
 import type { Agent, RiskPolicy } from "@/types/sentinel";
 
 export function AgentList() {
@@ -55,6 +57,7 @@ function AgentCard({ agent: a, policy, selected, onSelect }: { agent: Agent; pol
         ) : (
           <span className={riskColor[a.riskLevel]}>{a.riskLevel.toUpperCase()}</span>
         )}
+        <TempAccessBadge agentId={a.id} />
         <span className="ml-auto" title={a.identity?.detail ?? a.ansName}>
           {!a.identity ? (
             <span className="text-dim">ANS ?</span>
@@ -79,5 +82,19 @@ function RiskMeter({ score, fill, policy }: { score: number; fill: string; polic
         <span key={t} className="absolute top-0 h-full w-px bg-void/80" style={{ left: `${t}%` }} />
       ))}
     </div>
+  );
+}
+
+// "⏱ 32s" while the agent holds a just-in-time grant (soonest expiry if several).
+function TempAccessBadge({ agentId }: { agentId: string }) {
+  const grants = useSentinel((s) => s.grants);
+  const now = useNow();
+  const live = Object.values(grants).filter((g) => g.agentId === agentId && isTemporary(g) && g.status === "active");
+  if (live.length === 0) return null;
+  const soonest = live.reduce((a, b) => ((a.expiresAt ?? "~") <= (b.expiresAt ?? "~") ? a : b));
+  return (
+    <span className="rounded border border-accent/50 px-1 text-accent" title={live.map((g) => g.scope).join(", ")}>
+      ⏱ {countdownLabel(soonest, now)}
+    </span>
   );
 }

@@ -23,7 +23,7 @@ Status: ⬜ todo · 🟨 in progress (add your name) · ✅ done. Update it in t
 | F1 | Mission-control look: dark theme, top bar status, agent list with risk meters | P2 | - | a judge understands the state without reading text | `app/page.tsx`, `components/layout`, `components/agents` | ✅ Kiernan |
 | F2 | **Agent mesh graph**: fixed layout, per-event edge animation (green/red), quarantine isolation, ghost node for unknown actors | P2 | - | compromised scenario is visually obvious | `components/graph/*` | ✅ Kiernan |
 | F3 | Live feed + inspector: identity vs behavior split, risk before→after, signals, AI reason | P2 | - | incident click shows the full "why" | `components/activity`, `components/agents/Inspector.tsx` | ✅ Kiernan |
-| F4 | **Permission decay UI**: countdown bar, expire animation, dashed temp-grant edge | P2 | - | expiry visible from across the room | `Inspector.tsx`, new `components/permissions/` | ⬜ |
+| F4 | **Permission decay UI**: countdown bar, expire animation, dashed temp-grant edge | P2 | - | expiry visible from across the room | `Inspector.tsx`, new `components/permissions/` | ✅ Kiernan |
 | F5 | **Accountability page**: fleet table w/ hypothesis badges, agent report (findings, reasons, scopes, risk sparkline), audit log filters | P2 | B3 | step 5 of DEMO.md works | `app/accountability`, `components/accountability/*` | ⬜ |
 | I1 | Run everything locally; walk each scenario from the CLI (pair with P1) | I | - | can explain each step's decision | `simulator/` | ⬜ |
 | I2 | Scenario polish: pacing, captions, expectations; keep smoke green | I | I1 | `make smoke` passes 3× in a row | `simulator/sentinel_sim/scenarios/*` | ⬜ |

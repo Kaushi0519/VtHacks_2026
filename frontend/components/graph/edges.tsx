@@ -5,11 +5,15 @@
 //           halfway (at Sentinel) and burst into an ✕.
 import { BaseEdge, getBezierPath, Position, type Edge, type EdgeProps } from "@xyflow/react";
 import { useLayoutEffect, useRef } from "react";
+import { countdownLabel } from "@/lib/grants";
+import { useSentinel } from "@/lib/store";
+import { useNow } from "@/lib/useNow";
 import type { Decision } from "@/types/sentinel";
 import { INK } from "./layout";
 
 export type MeshEdgeData = { state: "normal" | "focus" | "faded" | "cut" };
 export type PacketEdgeData = { decision: Decision };
+export type GrantEdgeData = { grantId: string };
 
 const MESH_STYLE: Record<MeshEdgeData["state"], React.CSSProperties> = {
   normal: { stroke: INK.edge, strokeWidth: 1.25 },
@@ -79,4 +83,27 @@ export function PacketEdge(p: EdgeProps<Edge<PacketEdgeData>>) {
   );
 }
 
-export const edgeTypes = { mesh: MeshEdge, packet: PacketEdge };
+// A just-in-time grant: marching cyan dashes with a live countdown; turns red and fades when it decays.
+export function GrantEdge(p: EdgeProps<Edge<GrantEdgeData>>) {
+  const grant = useSentinel((s) => (p.data ? s.grants[p.data.grantId] : undefined));
+  const now = useNow();
+  const [path, midX, midY] = edgePath(p);
+  if (!grant) return null;
+  const active = grant.status === "active";
+  const color = active ? INK.accent : INK.crit;
+  const label = active ? `⏱ ${countdownLabel(grant, now)}` : "✕ EXPIRED";
+  return (
+    <g className={active ? undefined : "grant-ended"}>
+      <path d={path} fill="none" stroke={color} strokeWidth={2} strokeDasharray="6 4" className={active ? "grant-live" : undefined} />
+      {/* Sits above the line so a blocked packet's ✕ (at the midpoint) doesn't cover it. */}
+      <g transform={`translate(${midX} ${midY - 18})`}>
+        <rect x={-40} y={-10} width={80} height={20} rx={4} fill="#04070d" stroke={color} strokeWidth={1} />
+        <text textAnchor="middle" dy={4} fontSize={11} fontFamily="var(--font-geist-mono), monospace" fontWeight={700} fill={color}>
+          {label}
+        </text>
+      </g>
+    </g>
+  );
+}
+
+export const edgeTypes = { mesh: MeshEdge, packet: PacketEdge, grant: GrantEdge };
