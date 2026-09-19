@@ -300,7 +300,8 @@ export interface AgentActivityRow {
   role: string | null;
   known: boolean;
   status: "active" | "quarantined" | null;
-  riskScore: number | null;
+  riskScore: number | null; // live, cooled score (drifts back to baseline between requests)
+  peakRisk: number | null; // worst score reached in the window; null if no requests in window
   totals: ActivityTotals;
   topReason: string | null;
   hypothesis: Hypothesis;
@@ -323,6 +324,7 @@ export interface AgentReport {
   windowStart: string;
   windowEnd: string;
   totals: ActivityTotals;
+  peakRisk: number | null; // worst Behavioral Risk Score reached in the window (see riskHistory)
   denialsByReason: Record<string, number>;
   scopes: { scope: string; total: number; allowed: number; denied: number; inRole: boolean; lastAt: string | null }[];
   riskHistory: { timestamp: string; risk: number }[];

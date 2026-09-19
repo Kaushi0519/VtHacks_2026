@@ -208,6 +208,30 @@ def request_event_stats(db: Session, since: datetime, until: datetime) -> list[t
     return list(db.execute(q).all())
 
 
+def peak_risk_by_actor(
+    db: Session, since: datetime, until: datetime, agent_id: str | None = None
+) -> dict[str, int]:
+    """Highest Behavioral Risk Score each actor reached (max risk_after) over the window.
+
+    Retrospective "worst it got" for the accountability view — distinct from the live, cooled
+    `agent.risk_score`, which decays back to baseline between requests. risk_after lives only in the
+    event body JSON, so we scan the window's request events and reduce in Python (portable across
+    SQLite/Postgres; the window is small enough for the demo)."""
+    q = select(EventRow.actor_agent_id, EventRow.body).where(
+        EventRow.kind == EventKind.REQUEST.value,
+        EventRow.timestamp >= since,
+        EventRow.timestamp <= until,
+    )
+    if agent_id:
+        q = q.where(EventRow.actor_agent_id == agent_id)
+    peaks: dict[str, int] = {}
+    for actor, body in db.execute(q):
+        risk = body.get("riskAfter")
+        if risk is not None and risk > peaks.get(actor, -1):
+            peaks[actor] = risk
+    return peaks
+
+
 def kind_counts(db: Session, kind: EventKind, since: datetime, until: datetime) -> dict[str, int]:
     q = (
         select(EventRow.actor_agent_id, func.count())

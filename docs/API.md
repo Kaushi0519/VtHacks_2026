@@ -56,6 +56,12 @@ UNKNOWN_RESOURCE, FORBIDDEN_FOR_ROLE, NO_GRANT, GRANT_EXPIRED, GRANT_REVOKED, RE
 | `GET /api/incidents/{id}` | `IncidentDetail {incident, events}` | evidence, oldest first |
 | `GET /api/accountability/overview?days=7` | `FleetOverview` | agents + unknown actors ranked by hypothesis |
 | `GET /api/accountability/agents/{id}?days=7` | `AgentReport` | works for unknown actor ids too |
+
+Accountability rows carry two risk numbers, on purpose: `riskScore` is the **live, cooled** score
+(what the dashboard card shows — it drifts back to baseline between requests), while `peakRisk` is
+the **worst score reached in the window** (max `riskAfter` over the window's request events; `null`
+if the actor made no requests). The retrospective views should render `peakRisk` so a transient
+spike (e.g. a denied attempt) stays visible; `riskScore` is only the current instant.
 | `POST /api/admin/reset` | `{status}` | wipe + reload world.yaml + reseed; broadcasts `resync` |
 | `POST /api/admin/resync` | `{status}` | tell dashboards to refetch (after backfill) |
 

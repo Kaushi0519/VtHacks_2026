@@ -50,7 +50,8 @@ class AgentActivityRow(ApiModel):
     role: str | None = None  # None for unknown actors
     known: bool
     status: AgentStatus | None = None
-    risk_score: int | None = None
+    risk_score: int | None = None  # live, cooled score (drifts back to baseline between requests)
+    peak_risk: int | None = None  # worst score reached in the window; None if no requests in window
     totals: ActivityTotals
     top_reason: str | None = None  # most frequent denial ReasonCode
     hypothesis: Hypothesis
@@ -101,6 +102,7 @@ class AgentReport(ApiModel):
     window_start: datetime
     window_end: datetime
     totals: ActivityTotals
+    peak_risk: int | None = None  # worst Behavioral Risk Score reached in the window (see risk_history)
     denials_by_reason: dict[str, int]
     scopes: list[ScopeUsage]
     risk_history: list[RiskPoint]

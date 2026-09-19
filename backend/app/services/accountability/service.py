@@ -78,7 +78,8 @@ def _accumulate(db: Session, start: datetime, end: datetime) -> dict[str, _Acc]:
 
 
 def _row(
-    agent_id: str, acc: _Acc, agent: Agent | None, db: Session, world: World, start: datetime, end: datetime
+    agent_id: str, acc: _Acc, agent: Agent | None, db: Session, world: World,
+    start: datetime, end: datetime, peak_risk: int | None,
 ) -> AgentActivityRow:
     findings = evaluate(FindingInput(
         known=agent is not None,
@@ -96,6 +97,7 @@ def _row(
         known=agent is not None,
         status=agent.status if agent else None,
         risk_score=agent.risk_score if agent else None,
+        peak_risk=peak_risk,
         totals=acc.totals,
         top_reason=acc.denial_reasons.most_common(1)[0][0] if acc.denial_reasons else None,
         hypothesis=primary_hypothesis(findings),
@@ -106,9 +108,16 @@ def _row(
 
 def fleet_overview(db: Session, world: World, start: datetime, end: datetime) -> FleetOverview:
     accs = _accumulate(db, start, end)
+    peaks = repo.peak_risk_by_actor(db, start, end)
     agents = {a.id: a for a in repo.list_agents(db)}
-    known_rows = [_row(a.id, accs.get(a.id) or _Acc(), a, db, world, start, end) for a in agents.values()]
-    unknown_rows = [_row(aid, acc, None, db, world, start, end) for aid, acc in accs.items() if aid not in agents]
+    known_rows = [
+        _row(a.id, accs.get(a.id) or _Acc(), a, db, world, start, end, peaks.get(a.id))
+        for a in agents.values()
+    ]
+    unknown_rows = [
+        _row(aid, acc, None, db, world, start, end, peaks.get(aid))
+        for aid, acc in accs.items() if aid not in agents
+    ]
 
     def rank(r: AgentActivityRow):
         return (PRECEDENCE.index(r.hypothesis), -r.totals.denied - r.totals.quarantine_decisions)
@@ -126,7 +135,8 @@ def fleet_overview(db: Session, world: World, start: datetime, end: datetime) ->
 def agent_report(db: Session, world: World, agent_id: str, start: datetime, end: datetime) -> AgentReport:
     agent = repo.get_agent(db, agent_id)
     acc = _accumulate(db, start, end).get(agent_id) or _Acc()
-    row = _row(agent_id, acc, agent, db, world, start, end)
+    peak_risk = repo.peak_risk_by_actor(db, start, end, agent_id=agent_id).get(agent_id)
+    row = _row(agent_id, acc, agent, db, world, start, end, peak_risk)
 
     scopes = list(acc.scopes.values())
     if agent:
@@ -161,6 +171,7 @@ def agent_report(db: Session, world: World, agent_id: str, start: datetime, end:
         window_start=start,
         window_end=end,
         totals=acc.totals,
+        peak_risk=peak_risk,
         denials_by_reason=dict(acc.denial_reasons),
         scopes=sorted(scopes, key=lambda s: (-s.denied, -s.total)),
         risk_history=risk_history,
