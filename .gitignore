@@ -1,0 +1,21 @@
+# secrets
+.env
+.env.local
+*.pem
+
+# python
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+backend/*.db
+backend/*.db-journal
+
+# node
+node_modules/
+frontend/.next/
+
+# os / editors
+.DS_Store
+.idea/
+.vscode/

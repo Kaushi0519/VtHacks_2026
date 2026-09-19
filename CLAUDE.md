@@ -1,0 +1,159 @@
+# CLAUDE.md: Sentinel Mesh
+
+VTHacks 2026, 4-person team. Read this first, then `docs/ARCHITECTURE.md` for detail,
+`docs/API.md` for contracts, `docs/DEMO.md` for the presentation, `docs/TASKS.md` for who does what.
+
+## What we're building
+
+**Sentinel Mesh** is a zero-trust security gateway + control plane for networks of AI agents.
+Agents call APIs, data, tools and each other autonomously. Sentinel sits in between (as a
+gateway / SDK / sidecar would) and decides, per request, whether to allow it.
+
+> **Identity does not automatically imply behavioral trust.**
+> ANS tells Sentinel *who* the agent is. Sentinel decides whether its *behavior* still deserves access.
+
+Demo tenant: a hospital with FacilitiesAgent, PayrollAgent, SchedulingAgent, AnalyticsAgent,
+DatabaseAgent. The "wow": the real, ANS-verified FacilitiesAgent requests `payroll.salary.read`,
+its Behavioral Risk Score spikes, and Sentinel quarantines it.
+
+## MVP scope (build these first, in this order of importance)
+
+1. **Agent network**: simulated agents talking through the gateway
+2. **ANS identity**: verified vs. unverified/fake agents (GoDaddy ANS, real + mock adapters)
+3. **Policy engine**: deterministic allow/deny from role policy + the agent's own grants
+4. **Behavioral monitoring**: signals raise a per-agent Behavioral Risk Score
+5. **Quarantine**: critical risk isolates the agent from the whole mesh; operator release
+6. **Permission decay**: just-in-time grants that expire on their own (TTL / idle)
+7. **Accountability & visibility**: full audit history; per-agent findings ("Agent X keeps doing Y")
+8. **Live dashboard**: mesh graph, live feed, agent/incident inspector, accountability page
+
+**Stretch (only after MVP works end-to-end):** forensic replay animation, blast-radius simulator,
+human-approval cards, honeypot scenario, kill switch → ANS revocation, delegation-chain policies,
+Gemini accountability summaries. If a request would threaten the MVP, say so.
+
+## Architecture at a glance
+
+```
+simulator (:8001)  ──HTTP──▶  backend (:8000, FastAPI, ONE worker)  ──SSE──▶  frontend (:3000, Next.js)
+ fake hospital agents          POST /api/gateway/evaluate                       mission control + accountability
+                                 1 identity  (ANSService: GoDaddy ANS | mock)
+                                 2 quarantine check
+                                 3 permission (role policy + agent's own live grants)
+                                 4 behavior signals → Behavioral Risk Score
+                                 5 enforce: risk ≥ critical → QUARANTINE, else permission outcome
+                                 6 append ONE immutable SentinelEvent (+ incident / quarantine)
+                                 7 broadcast; schedule async Gemini analysis (never blocks)
+                               SQLite via SQLAlchemy (Postgres-ready)
+```
+Decisions: `allow | deny | require_human | quarantine`. Every decision has a machine
+`reasonCode` and a human `reason`.
+
+## Security model: never collapse these
+
+| Concept | Question | Owner |
+|---|---|---|
+| Identity | Who does this agent claim to be? | ANS name (`ans://v1.0.0.host`) |
+| Registration/lifecycle | Is that identity registered and ACTIVE? | GoDaddy ANS |
+| Proof of possession | Is the caller really that agent? | **Not in MVP** (prod: mTLS w/ ANS identity cert). Say so if asked. |
+| Enrollment | Is it one of *this company's* agents? | Sentinel (`AGENT_NOT_ENROLLED`) |
+| Authorization | May it use this scope right now? | Sentinel policy engine (deterministic) |
+| Behavior | Is what it's doing normal for it? | Sentinel signals + Behavioral Risk Score |
+| Enforcement | What happens now? | Sentinel enforcement (deterministic) |
+
+- **ANS rule:** GoDaddy ANS establishes and resolves agent identity and its lifecycle/integrity
+  information. Sentinel adds customer-environment behavioral monitoring and enforcement. Don't call
+  Sentinel's score a "trust score". It is the **Behavioral Risk Score**, separate from anything ANS exposes.
+- **Gemini rule:** **Gemini is an analysis component, not the authorization authority.** Hard
+  policy is deterministic code. Gemini runs *after* the decision, off the request path, with
+  schema-validated structured output and a labeled rule-based fallback. Never put policy in prompts.
+- **Never fake sponsor integrations.** Mock adapters are fine for development but must carry
+  `source: "mock"`, and the UI must show `ANS MOCK` / `AI: RULE-BASED`. Never present mock output as a live API call.
+  Never silently swap a real integration for a fake one.
+- Delegation never inherits permissions: only the direct caller's own grants are checked.
+- The risk score is a transparent heuristic (weights in `RiskPolicy`), not a trained or calibrated model.
+
+## Repo map & ownership
+
+| Path | What | Owner |
+|---|---|---|
+| `backend/app/models/` | **Contracts** (Pydantic, source of truth) | Person 1 (gatekeeper) |
+| `backend/app/services/gateway/pipeline.py` | Request lifecycle sequencer | Person 1 |
+| `backend/app/{api,db,realtime}/`, `container.py`, `background.py` | API, storage, SSE, sweeper | Person 1 |
+| `backend/app/services/{grants,incidents,accountability/service.py}` | Decay lifecycle, incidents, aggregation | Person 1 |
+| `backend/app/services/ans/` | ANSService + GoDaddy + mock adapters | Person 3 |
+| `backend/app/services/{policy,behavior,quarantine,gemini}/` | Authorization, risk, quarantine, AI analysis | Person 3 |
+| `backend/app/services/accountability/findings.py` | "What's wrong with this agent" rules | Person 3 |
+| `frontend/` (except `components/demo/`) | Dashboard, graph, accountability UI | Person 2 |
+| `frontend/types/sentinel.ts` | **Contract mirror** of backend models | Person 2 (updates with Person 1) |
+| `simulator/`, `simulator/fixtures/world.yaml` | Agents, scenarios, backfill, smoke test | Ishan (Person 3 co-owns `roles`/`riskPolicy`) |
+| `frontend/components/demo/` | Presenter demo controls | Ishan |
+| `docs/` | Architecture, API, demo, tasks | everyone; contracts by Person 1 |
+
+**Conflict-prone shared files:** `backend/app/models/*`, `frontend/types/sentinel.ts`,
+`docs/API.md`, `simulator/fixtures/world.yaml`, `backend/app/core/config.py` + `.env.example`
+(edit only your section), `pipeline.py`, `frontend/app/page.tsx`, lockfiles (on conflict,
+take theirs and re-run `uv sync` / `npm install`). Announce before editing these.
+
+## Contract change protocol
+
+`backend/app/models/*.py` is the single source of truth. A change to a model, endpoint, or SSE
+message must update, **in the same commit**: the Pydantic model, `frontend/types/sentinel.ts`,
+and `docs/API.md`. Prefer additive changes (new optional fields). Person 1 reviews before merge.
+If a request conflicts with an existing contract, stop and say so; don't build a parallel version.
+
+## Coding rules
+
+- Inspect existing code before changing architecture; reuse existing types and helpers.
+- Preserve module boundaries: services never touch SQLAlchemy rows (use `db/repo.py`); nothing
+  outside `services/ans/` knows ANS endpoints; nothing outside `services/gemini/` imports google-genai.
+- Every state change goes through a service under `container.state_lock`, appends events via
+  `repo.append_event` (events are append-only), and broadcasts **after** commit (`Changes.publish`).
+- Every decision must be explainable from stored events: reason codes + signal details.
+- Keep security logic in pure functions (`policy/engine.py`, `behavior/signals.py`, `risk.py`,
+  `findings.py`) and unit-test them in `backend/tests/`.
+- The simulator talks to the backend only over HTTP. Never import backend code from it.
+- Small composable functions, no new dependencies without reason, no secrets in code or logs.
+- Match the surrounding style: camelCase JSON on the wire, snake_case Python, UTC ISO timestamps.
+- **Hackathon rule:** between a sophisticated design that might not work and a simpler one that
+  demos reliably, choose simple unless the sophistication is visible and valuable to judges.
+- Presentation-first: every feature should answer "can judges SEE this?"
+
+## Commands
+
+```bash
+make setup      # uv sync (backend, simulator) + npm install + copy env files
+make backend    # :8000   (Swagger at /docs)
+make sim        # :8001   simulator control API
+make frontend   # :3000
+make test       # backend pytest
+make backfill   # reset + replay 7 days of history (needs ALLOW_BACKFILL=true)
+make smoke      # full demo with pass/fail checks against a running backend
+make reset      # back to seeded state
+```
+Run `make test` before merging backend changes and `make smoke` before merging anything near demo time.
+
+## Git workflow
+
+Trunk-based, short-lived branches, `main` must always be demoable.
+```bash
+git checkout main && git pull --rebase
+git checkout -b <area>/<feature>          # frontend/ backend/ security/ demo/ fix/ chore/
+# ...small coherent commits: "feat: add live agent graph", "fix: preserve trace id"...
+git checkout main && git pull --rebase
+git merge <area>/<feature> && git push origin main
+git branch -d <area>/<feature>
+```
+- Merge the same day; no giant end-of-night merges. Claim files/areas in chat before starting.
+- Changes to your own area merge directly. **Contract / shared-file changes** get a quick review
+  from Person 1 first (PR or screen-share).
+- Never force-push `main`. Never commit `.env` or keys.
+- Near demo time: main is frozen; only the team lead merges.
+
+## How Claude should work here
+
+1. Read this file; find which module/contract owns the behavior.
+2. Inspect the relevant code before proposing changes. Don't introduce a parallel architecture.
+3. Flag conflicts with existing contracts or the MVP immediately instead of silently doing both.
+4. Make the smallest coherent change; run `make test` (and `make smoke` if the flow changed).
+5. Update docs/contracts when interfaces genuinely change; explain major architectural changes.
+6. Correct technically misleading security claims. This project must survive judges' questions.
