@@ -36,6 +36,7 @@ class FindingInput:
     denied_by_scope: dict[str, dict[str, int]] = field(default_factory=dict)
     grants: list[PermissionGrant] = field(default_factory=list)
     forbidden: list[str] = field(default_factory=list)  # role's forbidden scope patterns
+    attempted_scopes: set[str] = field(default_factory=set)  # every scope the agent tried, any decision
 
 
 def _n(count: float, noun: str) -> str:
@@ -86,9 +87,14 @@ def evaluate(inp: FindingInput) -> list[Finding]:
             detail=f"{_n(t.expired_grant_attempts, 'attempt')} on expired grants in {days}.",
         ))
 
+    # "Unused" means never exercised AND never even attempted. A grant the agent tried to use but was
+    # blocked on (require_human, or a deny that never refreshed last_used_at) is needed, not surplus —
+    # flagging it as over-privileged is wrong (rehearsal finding G3).
     unused = [
         g.scope for g in inp.grants
-        if g.kind == GrantKind.BASELINE and (g.last_used_at is None or g.last_used_at < inp.window_start)
+        if g.kind == GrantKind.BASELINE
+        and (g.last_used_at is None or g.last_used_at < inp.window_start)
+        and not any(any_match([g.scope], attempted) for attempted in inp.attempted_scopes)
     ]
     if unused and t.requests:
         findings.append(Finding(
