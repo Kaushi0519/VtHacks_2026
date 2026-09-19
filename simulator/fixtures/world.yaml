@@ -103,7 +103,7 @@ agents:
     role: analytics
     ansName: ans://v1.0.0.analytics.demo-hospital.example
     description: Produces operational reports; needs patient data only for specific reports.
-    currentTask: Produce the Q3 cardiology 30-day readmissions summary (aggregate, de-identified counts only).
+    currentTask: Compute the Q3 cardiology 30-day readmission COUNT from warehouse aggregates only. Individual patient records are NOT needed for this task.
     peers: [database-agent]
     expectedRpm: 5
     initialRisk: 9

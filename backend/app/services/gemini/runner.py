@@ -35,7 +35,7 @@ if TYPE_CHECKING:
 
 log = logging.getLogger("sentinel.analysis")
 
-REVIEW_COOLDOWN_SECONDS = 8.0  # at most one semantic review per agent per window (cost + noise control)
+REVIEW_COOLDOWN_SECONDS = 3.5  # re-review as the pattern develops; still bounded so we don't spam Gemini
 
 
 class AnalysisRunner:
@@ -114,6 +114,12 @@ class AnalysisRunner:
                     and analysis.confidence >= rp.ai_quarantine_min_confidence
                     and analysis.recommended_action == RecommendedAction.QUARANTINE
                     and agent.status != AgentStatus.QUARANTINED
+                )
+                log.info(
+                    "gemini analysis agent=%s source=%s severity=%s confidence=%.2f action=%s violations=%s -> %s",
+                    agent_id, analysis.source, analysis.severity.value, analysis.confidence,
+                    analysis.recommended_action.value, analysis.violations,
+                    "QUARANTINE" if triggers_quarantine else f"+{points}pts",
                 )
 
                 if triggers_quarantine:
