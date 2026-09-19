@@ -4,7 +4,7 @@
 import clsx from "clsx";
 import { levelFor, riskColor, riskFill, time } from "@/lib/format";
 import { useSentinel } from "@/lib/store";
-import type { Agent, IdentityResult, Incident, SentinelEvent, Severity } from "@/types/sentinel";
+import type { Agent, BehaviorAnalysis, IdentityResult, Incident, SentinelEvent, Severity } from "@/types/sentinel";
 
 export function Section({ title, subtitle, children }: { title: string; subtitle?: string; children: React.ReactNode }) {
   return (
@@ -131,9 +131,22 @@ function aiTriggeredQuarantine(incident: Incident, events: SentinelEvent[]): boo
   return Boolean(q?.reason?.includes("Gemini"));
 }
 
-export function AnalysisBox({ incident, events = [] }: { incident: Incident; events?: SentinelEvent[] }) {
-  const a = incident.analysis;
+// A semantic review that fires with no rule behind it opens no incident, so its analysis lives only
+// on the ANALYSIS event's metadata. That is exactly the case DEMO.md step 5d shows, so the box has
+// to read from either source.
+export function AnalysisBox({
+  incident,
+  event,
+  events = [],
+}: {
+  incident?: Incident | null;
+  event?: SentinelEvent | null;
+  events?: SentinelEvent[];
+}) {
+  const fromEvent = event?.kind === "analysis" ? (event.metadata.analysis as BehaviorAnalysis | undefined) ?? null : null;
+  const a = incident?.analysis ?? fromEvent;
   if (!a) {
+    if (!incident) return null;
     return (
       <p className="mb-2 rounded border border-line px-2 py-1.5 text-xs text-dim">
         {incident.analysisStatus === "pending" ? "AI analysis running (off the request path)…" : "Not analyzed."}
@@ -141,10 +154,11 @@ export function AnalysisBox({ incident, events = [] }: { incident: Incident; eve
     );
   }
   const gemini = a.source === "gemini";
-  const aiQuarantine = aiTriggeredQuarantine(incident, events);
+  const aiQuarantine = incident ? aiTriggeredQuarantine(incident, events) : false;
   // What the deterministic half of Sentinel saw. No signal codes means no rule fired: the whole
   // point of step 5d is that every individual request was permitted.
-  const staticVerdict = incident.signalCodes.length === 0 ? "no violation" : incident.signalCodes.join(", ");
+  const signalCodes = incident?.signalCodes ?? [];
+  const staticVerdict = signalCodes.length === 0 ? "no violation" : signalCodes.join(", ");
 
   return (
     <div className={clsx("mb-2 rounded border px-2 py-1.5", aiQuarantine ? "border-crit/50 bg-crit/10" : "border-accent/25 bg-accent/5")}>
@@ -161,7 +175,7 @@ export function AnalysisBox({ incident, events = [] }: { incident: Incident; eve
       {/* The two detectors, side by side. This is the claim step 5d is built on. */}
       <p className="mb-1 font-mono text-[10px] tracking-wider">
         <span className="text-dim">STATIC POLICY: </span>
-        <span className={incident.signalCodes.length === 0 ? "text-ok" : "text-high"}>{staticVerdict}</span>
+        <span className={signalCodes.length === 0 ? "text-ok" : "text-high"}>{staticVerdict}</span>
       </p>
 
       {a.violations.length > 0 && (
