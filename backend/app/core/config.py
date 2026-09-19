@@ -48,7 +48,7 @@ class Settings(BaseSettings):
     # --- Gemini behavioral analysis (Person 3) ---
     gemini_mode: Literal["real", "mock"] = "mock"
     gemini_api_key: str = ""
-    gemini_model: str = "gemini-flash-latest"  # official current flash alias; pin a version if needed
+    gemini_model: str = "gemini-flash-lite-latest"  # lite = most free-tier headroom; flash-latest 503s under load
     gemini_timeout_seconds: float = 8.0
 
 
