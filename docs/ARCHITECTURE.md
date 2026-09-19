@@ -149,13 +149,25 @@ separate, permanent ANS lifecycle action (P2, explicit operator confirmation).
 
 ## 10. Gemini (`services/gemini/`, Person 3)
 
-Two layers: deterministic enforcement decides; Gemini *explains*. When an incident opens (or
-escalates to quarantine), `AnalysisRunner` builds compact telemetry (role, policy, normal actions,
-recent actions, signals, risk) and calls Gemini with structured output (`GeminiAnalysisOutput`:
-anomaly type, severity, confidence, reason, recommended action). The output is validated and clamped,
-stored on the incident, and emitted as an `analysis` event. Timeout, quota, or bad JSON fall back to a
-rule-based analysis labeled `source: "fallback"`. The demo works fully with `GEMINI_MODE=mock`.
-P1: accountability narrative per agent; bounded `AI_ASSESSMENT` risk contribution.
+**Two parallel detectors feed the Sentinel controller.** Hard policy is fast and objective; Gemini is
+the semantic brain. It answers: *is this sequence of actions consistent with the agent's role and its
+current task?* — the thing rules cannot express.
+
+Two triggers into the same analyzer (`AnalysisRunner`):
+- **incident** (`schedule`): a hard rule already opened an incident → explain + possibly escalate.
+- **semantic review** (`schedule_review`): an agent AGGREGATED sensitive data (≥3 allowed high/critical
+  accesses) while NO rule fired → run Gemini so a malicious *sequence* of permitted actions is caught.
+  Throttled per agent.
+
+Telemetry: role, **current task**, recent action window (with resource sensitivity), deterministic
+signals, delegation targets. Gemini returns `GeminiAnalysisOutput` (anomaly type, severity, confidence,
+**violations[]**, reason, recommended action) — **it never emits a 0–100 score.** Sentinel maps
+severity → a bounded contribution (`weight_ai_semantic_*` in `RiskPolicy`), and a **CRITICAL finding at
+≥ `ai_quarantine_min_confidence` (0.85), real `source=="gemini"` only, quarantines the agent directly**
+— even when deterministic signals stayed calm. The quarantine event records Gemini's severity,
+confidence, and reasoning. Timeout/quota/bad-JSON → rule-based fallback (`source:"fallback"`), which
+never moves the score and never quarantines. The demo works fully with `GEMINI_MODE=mock` (advisory
+only); AI-triggered quarantine needs `GEMINI_MODE=real`.
 
 ## 11. Accountability & visibility (`services/accountability/`)
 

@@ -35,6 +35,7 @@ def seed_if_empty(db: Session, world: World) -> bool:
                 display_name=spec.display_name,
                 role=spec.role,
                 description=spec.description,
+                current_task=spec.current_task,
                 ans_name=spec.ans_name,
                 status=AgentStatus.ACTIVE,
                 risk_score=spec.initial_risk,

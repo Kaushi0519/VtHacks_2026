@@ -43,6 +43,14 @@ class RiskPolicy(ApiModel):
     weight_repeated_denials: int = 10
     weight_expired_grant_use: int = 5
     weight_honeypot: int = 50
+    # Gemini SEMANTIC findings map to bounded score contributions (Sentinel owns the number, not the LLM).
+    # Only real (source=="gemini") analysis contributes; the rule-based fallback never does.
+    weight_ai_semantic_medium: int = 10
+    weight_ai_semantic_high: int = 25
+    weight_ai_semantic_critical: int = 40
+    # Gemini may itself quarantine on a CRITICAL semantic finding at/above this confidence, even when
+    # deterministic signals stayed calm. Obvious violations never wait for this (they quarantine on rules).
+    ai_quarantine_min_confidence: float = 0.85
     rate_window_seconds: int = 60
     rate_spike_multiplier: float = 3.0
     rate_spike_min_requests: int = 8
@@ -90,6 +98,7 @@ class AgentSpec(ApiModel):
     role: str
     ans_name: str
     description: str = ""
+    current_task: str = ""  # active assignment; Gemini judges whether behavior is consistent with it
     peers: list[str] = Field(default_factory=list)
     expected_rpm: int = 6
     initial_risk: int = 8

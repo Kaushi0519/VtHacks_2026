@@ -32,6 +32,7 @@ export interface Agent {
   displayName: string;
   role: string;
   description: string;
+  currentTask: string; // what the agent is currently supposed to be doing; Gemini judges consistency
   ansName: string;
   identity: IdentityResult | null;
   status: "active" | "quarantined";
@@ -171,6 +172,7 @@ export interface BehaviorAnalysis {
   anomalyType: AnomalyType;
   severity: Severity;
   confidence: number;
+  violations: string[]; // semantic violation tags Gemini named, e.g. "task deviation", "possible exfiltration"
   reason: string;
   recommendedAction: "none" | "monitor" | "require_human" | "quarantine";
   source: "gemini" | "fallback"; // label fallback as "rule-based"

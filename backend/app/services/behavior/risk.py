@@ -8,7 +8,7 @@ quarantined, where it freezes until an operator releases the agent).
 from datetime import datetime
 
 from app.models.agent import Agent, AgentStatus
-from app.models.common import RiskLevel
+from app.models.common import RiskLevel, Severity
 from app.models.event import RiskSignal
 from app.models.policy import RiskPolicy
 
@@ -32,3 +32,15 @@ def cooled_score(agent: Agent, now: datetime, rp: RiskPolicy) -> int:
 
 def apply_signals(before: int, signals: list[RiskSignal]) -> int:
     return max(0, min(100, before + sum(s.weight for s in signals)))
+
+
+def semantic_points(source: str, severity: Severity, rp: RiskPolicy) -> int:
+    """Bounded score contribution from a Gemini SEMANTIC finding. Sentinel owns the number, and only
+    a real (source=="gemini") finding counts — the rule-based fallback never moves the score."""
+    if source != "gemini":
+        return 0
+    return {
+        Severity.MEDIUM: rp.weight_ai_semantic_medium,
+        Severity.HIGH: rp.weight_ai_semantic_high,
+        Severity.CRITICAL: rp.weight_ai_semantic_critical,
+    }.get(severity, 0)

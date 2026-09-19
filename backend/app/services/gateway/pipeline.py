@@ -23,8 +23,9 @@ from app.core.changes import Changes
 from app.core.ids import new_id, utcnow
 from app.core.logging import log_event
 from app.db import repo
+from app.db.repo import EventFilter
 from app.models.agent import Agent, AgentStatus
-from app.models.common import Decision
+from app.models.common import Decision, Sensitivity
 from app.models.event import EventKind, ReasonCode, SentinelEvent
 from app.models.gateway import AgentRequest, GatewayDecision
 from app.models.identity import IdentityResult
@@ -67,7 +68,30 @@ class Gateway:
         changes.publish(c.broadcaster)
         for incident_id in changes.analyze_incident_ids:
             c.analysis.schedule(incident_id)
+        self._maybe_semantic_review(changes.decision_event)
         return response
+
+    def _maybe_semantic_review(self, event: SentinelEvent | None) -> None:
+        """Second detector: once an agent has AGGREGATED sensitive data (several allowed high/critical
+        accesses), run a Gemini semantic review so a malicious *sequence* of individually-permitted
+        actions is caught even when no hard rule fired. Throttled per agent in the AnalysisRunner."""
+        if event is None or event.decision != Decision.ALLOW or not event.action:
+            return
+        resource = self.c.world.resource_for_scope(event.action)
+        if resource is None or resource.sensitivity not in (Sensitivity.HIGH, Sensitivity.CRITICAL):
+            return
+        with self.c.session_factory() as db:
+            recent = repo.query_events(
+                db, EventFilter(agent_id=event.actor_agent_id, kind=EventKind.REQUEST, limit=15)
+            )
+        sensitive = sum(
+            1 for e in recent
+            if e.decision == Decision.ALLOW and e.action
+            and (r := self.c.world.resource_for_scope(e.action)) is not None
+            and r.sensitivity in (Sensitivity.HIGH, Sensitivity.CRITICAL)
+        )
+        if sensitive >= 3:
+            self.c.analysis.schedule_review(event.actor_agent_id)
 
     def _decide(
         self, db: Session, req: AgentRequest, identity: IdentityResult, now, trace_id: str, backfill: bool

@@ -115,9 +115,14 @@ Decisions: `allow | deny | require_human | quarantine`. Every decision has a mac
 - **ANS rule:** GoDaddy ANS establishes and resolves agent identity and its lifecycle/integrity
   information. Sentinel adds customer-environment behavioral monitoring and enforcement. Don't call
   Sentinel's score a "trust score". It is the **Behavioral Risk Score**, separate from anything ANS exposes.
-- **Gemini rule:** **Gemini is an analysis component, not the authorization authority.** Hard
-  policy is deterministic code. Gemini runs *after* the decision, off the request path, with
-  schema-validated structured output and a labeled rule-based fallback. Never put policy in prompts.
+- **Gemini rule (two parallel detectors):** hard policy handles identity + objective violations
+  instantly (and quarantines obvious attacks without waiting). **Gemini is the SEMANTIC detector:**
+  it judges whether a *sequence* of individually-permitted actions is consistent with the agent's
+  role and current task. Gemini does NOT emit a 0–100 score — **Sentinel owns the score**; a Gemini
+  severity maps to a bounded contribution. Gemini MAY itself trigger quarantine on a CRITICAL finding
+  at ≥0.85 confidence, but only real `source=="gemini"` (never the rule-based fallback), and every
+  AI-triggered quarantine logs Gemini's severity, confidence, and reasoning on the event. Never put
+  hard policy in prompts; keep obvious violations deterministic.
 - **Never fake sponsor integrations.** Mock adapters are fine for development but must carry
   `source: "mock"`, and the UI must show `ANS MOCK` / `AI: RULE-BASED`. Never present mock output as a live API call.
   Never silently swap a real integration for a fake one.

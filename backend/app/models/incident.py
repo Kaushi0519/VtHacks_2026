@@ -35,11 +35,12 @@ class RecommendedAction(StrEnum):
 
 class GeminiAnalysisOutput(BaseModel):
     """Exact structured-output schema we ask Gemini for. Kept constraint-free for the SDK;
-    Sentinel validates and clamps before use. Gemini advises, it never enforces."""
+    Sentinel validates and clamps before use. Gemini supplies SEMANTIC findings; Sentinel owns the score."""
 
     anomaly_type: AnomalyType
     severity: Severity
     confidence: float
+    violations: list[str]  # short semantic violation tags, e.g. "task deviation", "possible exfiltration"
     reason: str
     recommended_action: RecommendedAction
 
@@ -48,6 +49,7 @@ class BehaviorAnalysis(ApiModel):
     anomaly_type: AnomalyType
     severity: Severity
     confidence: float = Field(ge=0, le=1)
+    violations: list[str] = Field(default_factory=list)  # semantic violations Gemini named
     reason: str
     recommended_action: RecommendedAction
     source: Literal["gemini", "fallback"]  # UI must label fallback as rule-based

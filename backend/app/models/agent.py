@@ -28,6 +28,7 @@ class Agent(ApiModel):
     display_name: str
     role: str
     description: str = ""
+    current_task: str = ""  # what this agent is CURRENTLY supposed to be doing; Gemini judges consistency
     ans_name: str  # e.g. "ans://v1.0.0.facilities.demo-hospital.example"
     identity: IdentityResult | None = None  # last ANS check
     status: AgentStatus = AgentStatus.ACTIVE

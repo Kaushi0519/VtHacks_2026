@@ -21,7 +21,9 @@
 | 3b | **"That agent wasn't fake. ANS verified exactly who it was. Its behavior changed. Identity alone isn't enough."** | click the incident | IDENTITY: VERIFIED vs BEHAVIORAL RISK: 100 CRITICAL; the WHY panel shows Gemini's explanation |
 | 4 | "Meanwhile, AnalyticsAgent's temporary access expired. Nobody had to remember to revoke it." | select AnalyticsAgent | grant EXPIRED; its next attempt DENY GRANT_EXPIRED |
 | 5 | "And the company can finally see what its agents have been doing." | **Accountability** tab | FacilitiesAgent *possibly compromised*; SchedulingAgent *likely misconfigured* (12 denied payroll.hours.write in 7 days); payroll-sync-bot *unverified identity*; AnalyticsAgent *over-privileged* (never uses building.energy.read) |
-| 6 | **"ANS tells Sentinel who the agent is. Sentinel decides whether its behavior still deserves access."** | | |
+| 5c | **"Rules catch known violations. But what about an agent whose every action is *allowed*?"** | **Subtle compromise** (needs `GEMINI_MODE=real`) | AnalyticsAgent (task: de-identified readmissions summary) starts bulk-aggregating patient records — every request ALLOW, static risk stays low |
+| 5d | **"Static policy passed all of it. Gemini read the *sequence* and saw exfiltration."** | click the incident | STATIC POLICY: no violation · **GEMINI: CRITICAL** (task deviation, possible exfiltration) → **AI-triggered QUARANTINE**; reasoning + confidence shown |
+| 6 | **"ANS tells Sentinel who the agent is. Deterministic rules catch the obvious. Gemini catches what only understanding the task could."** | | |
 
 ## If something breaks
 - Dashboard stale or odd: **Reset**, then `make backfill`, then rerun from step 1.
@@ -31,7 +33,11 @@
 - A quarantined agent stays quarantined: always reset before rerunning the compromised scenario.
 
 ## Judge Q&A prep
-- *Is Gemini deciding who gets blocked?* No. Deterministic policy decides; Gemini explains and advises off the request path.
+- *Is Gemini deciding who gets blocked?* Two detectors run in parallel. Hard policy decides the objective
+  cases instantly (identity, forbidden scope, honeypot). Gemini is the **semantic** detector: it judges
+  whether a *sequence* of individually-permitted actions fits the agent's role + task, and it can trigger
+  quarantine on a CRITICAL finding at ≥85% confidence — real Gemini only, never the rule-based fallback,
+  and always with its reasoning logged. Sentinel owns the numeric score; Gemini never invents one.
 - *How is the risk score computed?* Transparent weighted signals (ARCHITECTURE §7). A heuristic, not a trained model.
 - *What stops an agent spoofing an ANS name?* Our MVP checks registration + lifecycle. Production adds mTLS with the ANS identity certificate. We haven't built that yet.
 - *Can an attacker train the baseline?* Profiles learn only from allowed requests.

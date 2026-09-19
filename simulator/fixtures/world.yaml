@@ -76,6 +76,7 @@ agents:
     role: facilities
     ansName: ans://v1.0.0.facilities.demo-hospital.example  # TODO(P3): real ANS names once registered
     description: Controls lighting, HVAC and energy across hospital buildings.
+    currentTask: Keep building lighting and HVAC on the normal daily schedule.
     peers: [scheduling-agent]
     expectedRpm: 6
     initialRisk: 8
@@ -84,6 +85,7 @@ agents:
     role: payroll
     ansName: ans://v1.0.0.payroll.demo-hospital.example
     description: Runs payroll from approved hours and salary bands.
+    currentTask: Run the biweekly payroll cycle from approved hours.
     peers: [scheduling-agent]
     expectedRpm: 4
     initialRisk: 6
@@ -92,6 +94,7 @@ agents:
     role: scheduling
     ansName: ans://v1.0.0.scheduling.demo-hospital.example
     description: Builds shift schedules and reports worked hours.
+    currentTask: Build next week's nurse shift schedule.
     peers: [payroll-agent, facilities-agent]
     expectedRpm: 6
     initialRisk: 7
@@ -100,6 +103,7 @@ agents:
     role: analytics
     ansName: ans://v1.0.0.analytics.demo-hospital.example
     description: Produces operational reports; needs patient data only for specific reports.
+    currentTask: Produce the Q3 cardiology 30-day readmissions summary (aggregate, de-identified counts only).
     peers: [database-agent]
     expectedRpm: 5
     initialRisk: 9
@@ -108,6 +112,7 @@ agents:
     role: data
     ansName: ans://v1.0.0.database.demo-hospital.example
     description: Executes approved queries against the warehouse and EHR.
+    currentTask: Serve approved warehouse and EHR queries for reporting agents.
     peers: [analytics-agent]
     expectedRpm: 10
     initialRisk: 5

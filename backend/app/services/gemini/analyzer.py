@@ -96,6 +96,7 @@ class GeminiAnalyzer:
                 anomaly_type=out.anomaly_type,
                 severity=out.severity,
                 confidence=min(1.0, max(0.0, out.confidence)),
+                violations=[v.strip()[:60] for v in out.violations][:6],
                 reason=out.reason.strip()[:400],
                 recommended_action=out.recommended_action,
                 source="gemini",
