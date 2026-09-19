@@ -4,7 +4,7 @@
 import clsx from "clsx";
 import { levelFor, riskColor, riskFill, time } from "@/lib/format";
 import { useSentinel } from "@/lib/store";
-import type { Agent, IdentityResult, Incident, SentinelEvent } from "@/types/sentinel";
+import type { Agent, IdentityResult, Incident, SentinelEvent, Severity } from "@/types/sentinel";
 
 export function Section({ title, subtitle, children }: { title: string; subtitle?: string; children: React.ReactNode }) {
   return (
@@ -113,7 +113,25 @@ export function BehaviorCard({ agent, event }: { agent: Agent | null; event: Sen
   );
 }
 
-export function AnalysisBox({ incident }: { incident: Incident }) {
+const severityText: Record<Severity, string> = {
+  low: "text-dim",
+  medium: "text-warn",
+  high: "text-high",
+  critical: "text-crit",
+};
+
+// Did Gemini itself cause this quarantine, or did a deterministic rule? Both end as an isolated
+// agent with a Gemini analysis attached, so we only claim "AI-triggered" when the quarantine event
+// the backend stored says Gemini caused it. Under-claiming is the safe direction: if this misses,
+// the box falls back to calling the analysis advisory, which is never a false security claim.
+function aiTriggeredQuarantine(incident: Incident, events: SentinelEvent[]): boolean {
+  if (!incident.quarantined || incident.analysis?.source !== "gemini") return false;
+  const q = events.find((e) => e.kind === "quarantine" && e.incidentId === incident.id)
+    ?? events.find((e) => e.kind === "quarantine");
+  return Boolean(q?.reason?.includes("Gemini"));
+}
+
+export function AnalysisBox({ incident, events = [] }: { incident: Incident; events?: SentinelEvent[] }) {
   const a = incident.analysis;
   if (!a) {
     return (
@@ -123,18 +141,54 @@ export function AnalysisBox({ incident }: { incident: Incident }) {
     );
   }
   const gemini = a.source === "gemini";
+  const aiQuarantine = aiTriggeredQuarantine(incident, events);
+  // What the deterministic half of Sentinel saw. No signal codes means no rule fired: the whole
+  // point of step 5d is that every individual request was permitted.
+  const staticVerdict = incident.signalCodes.length === 0 ? "no violation" : incident.signalCodes.join(", ");
+
   return (
-    <div className="mb-2 rounded border border-accent/25 bg-accent/5 px-2 py-1.5">
+    <div className={clsx("mb-2 rounded border px-2 py-1.5", aiQuarantine ? "border-crit/50 bg-crit/10" : "border-accent/25 bg-accent/5")}>
       <div className="mb-1 flex flex-wrap items-center gap-1.5 font-mono text-[10px] tracking-wider">
         <span className={clsx("rounded border px-1.5", gemini ? "border-accent/50 text-accent" : "border-warn/50 text-warn")}>
           {gemini ? `GEMINI · ${a.model ?? ""}` : "AI: RULE-BASED"}
         </span>
+        <span className={clsx("font-bold", severityText[a.severity])}>{a.severity.toUpperCase()}</span>
         <span className="text-dim">{a.anomalyType.replaceAll("_", " ").toUpperCase()}</span>
         <span className="text-dim">· {Math.round(a.confidence * 100)}% conf.</span>
         <span className="text-dim">· recommends {a.recommendedAction.replace("_", " ")}</span>
       </div>
+
+      {/* The two detectors, side by side. This is the claim step 5d is built on. */}
+      <p className="mb-1 font-mono text-[10px] tracking-wider">
+        <span className="text-dim">STATIC POLICY: </span>
+        <span className={incident.signalCodes.length === 0 ? "text-ok" : "text-high"}>{staticVerdict}</span>
+      </p>
+
+      {a.violations.length > 0 && (
+        <p className="mb-1 flex flex-wrap gap-1">
+          {a.violations.map((v) => (
+            <span key={v} className="rounded bg-raised px-1.5 font-mono text-[10px] text-slate-300">{v}</span>
+          ))}
+        </p>
+      )}
+
       <p className="text-sm text-slate-200">{a.reason}</p>
-      <p className="mt-1 text-[10px] text-dim">Analysis only. The decision itself was made by deterministic policy.</p>
+
+      {aiQuarantine ? (
+        <p className="mt-1 text-[10px] text-crit">
+          AI-TRIGGERED QUARANTINE · Gemini&apos;s finding caused this isolation. Sentinel enforces it only for real
+          Gemini analysis rated CRITICAL at high confidence; the rule-based fallback never enforces.
+        </p>
+      ) : gemini ? (
+        <p className="mt-1 text-[10px] text-dim">
+          Advisory here. Gemini&apos;s severity adds bounded points to the Behavioral Risk Score — Sentinel owns the
+          number — and this decision was made by deterministic policy.
+        </p>
+      ) : (
+        <p className="mt-1 text-[10px] text-warn">
+          Rule-based fallback, not a live model call. It never moves the score and never enforces.
+        </p>
+      )}
     </div>
   );
 }

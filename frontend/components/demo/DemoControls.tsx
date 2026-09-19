@@ -1,6 +1,7 @@
 "use client";
 // Owner: Ishan. Presenter panel: runs simulator scenarios (simulator control API, :8001).
-// Steps mirror docs/DEMO.md. Keyboard: D hide/show · 1/2/3 steps · A ambient on/off · R reset.
+// Steps mirror docs/DEMO.md; any other scenario the simulator offers gets its own button and
+// the next digit. Keyboard: D hide/show · digits run steps · A ambient on/off · R reset.
 // A scenario that is already running can't be started again (a double-click would stack runs,
 // e.g. four overlapping decay grants whose expired reuse quarantines AnalyticsAgent).
 import clsx from "clsx";
@@ -57,6 +58,16 @@ export function DemoControls() {
 
   const available = new Set(scenarios?.map((s) => s.id));
   const runningIds = new Set([...runs.filter(isRunning).map((r) => r.scenarioId), ...starting]);
+  // The scripted steps, plus a button for every other scenario the simulator offers. Without this
+  // tail, a scenario added on the simulator side (e.g. subtle_exfiltration) is unreachable from the
+  // bar and the presenter has no way to run it.
+  const scripted = STEPS.map((s) => ({ ...s, title: undefined as string | undefined, runs: s.runs.filter((id) => available.has(id)) }))
+    .filter((s) => s.runs.length > 0);
+  const claimed = new Set([...STEPS.flatMap((s) => s.runs), AMBIENT, BACKFILL]);
+  const extras = (scenarios ?? [])
+    .filter((s) => !claimed.has(s.id) && !s.loop)
+    .map((s, i) => ({ key: String(scripted.length + 1 + i), label: s.title, title: s.description, runs: [s.id] }));
+  const allSteps = [...scripted, ...extras];
   const ambientRun = runs.find((r) => r.scenarioId === AMBIENT && isRunning(r));
 
   const fail = (e: unknown) => setError(actionError(e));
@@ -105,8 +116,8 @@ export function DemoControls() {
       else if (k === "a" && available.has(AMBIENT)) toggleAmbient();
       else if (k === "r") reset();
       else {
-        const step = STEPS.find((s) => s.key === k);
-        if (step) start(step.runs.filter((id) => available.has(id)));
+        const step = allSteps.find((s) => s.key === k);
+        if (step) start(step.runs);
       }
     };
     window.addEventListener("keydown", onKey);
@@ -117,7 +128,6 @@ export function DemoControls() {
 
   // Caption: the most recent non-looping run that's still going (ambient has nothing to narrate).
   const narrated = runs.find((r) => isRunning(r) && r.scenarioId !== AMBIENT);
-  const steps = STEPS.map((s) => ({ ...s, runs: s.runs.filter((id) => available.has(id)) })).filter((s) => s.runs.length > 0);
 
   return (
     <div className="flex flex-wrap items-center gap-2 border-t border-line bg-panel/80 px-4 py-2 text-xs">
@@ -135,8 +145,8 @@ export function DemoControls() {
             </DemoButton>
           )}
           <span className="mx-1 h-4 w-px bg-line" />
-          {steps.map((s) => (
-            <DemoButton key={s.key} hotkey={s.key} onClick={() => start(s.runs)} running={s.runs.some((id) => runningIds.has(id))}>
+          {allSteps.map((s) => (
+            <DemoButton key={s.key} hotkey={s.key} onClick={() => start(s.runs)} running={s.runs.some((id) => runningIds.has(id))} title={s.title}>
               {s.label}
             </DemoButton>
           ))}

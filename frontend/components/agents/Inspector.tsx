@@ -46,7 +46,7 @@ export function Inspector() {
       <BehaviorCard agent={agent} event={decision} />
       <Section title="Why">
         {decision && <DecisionLine e={decision} />}
-        {incident && <AnalysisBox incident={incident} />}
+        {incident && <AnalysisBox incident={incident} events={timeline} />}
         {incident && timeline.length > 0 && (
           <Timeline events={timeline} selectedId={decision?.id ?? null} onSelect={selectEvent} />
         )}
