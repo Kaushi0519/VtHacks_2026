@@ -1,3 +1,4 @@
+// World configuration numeric ranges and consistency are validated by the backend.
 // MIRROR of backend/app/models/*.py (the source of truth) and docs/API.md.
 // Change all three in the same commit. Person 1 reviews contract changes.
 
@@ -110,6 +111,7 @@ export type ReasonCode =
   | "GRANT_REVOKED"
   | "REQUIRES_HUMAN"
   | "RISK_THRESHOLD"
+  | "AI_SEMANTIC_QUARANTINE"
   | "OPERATOR_ACTION"
   | "TTL_ELAPSED"
   | "IDLE_TIMEOUT"

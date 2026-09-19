@@ -47,7 +47,7 @@ class Settings(BaseSettings):
     ans_verify_bin: str = "ans-verify"             # path to the ans-verify binary
     ans_timeout_seconds: float = 5.0
     ans_cache_ttl_seconds: int = 60
-    ans_stale_ok_seconds: int = 3600  # serve last *real* ANS answer if the TL is unreachable
+    ans_stale_ok_seconds: int = 3600  # retain stale evidence for display, never authorize from it
 
     # --- Gemini behavioral analysis (Person 3) ---
     gemini_mode: Literal["real", "mock"] = "mock"

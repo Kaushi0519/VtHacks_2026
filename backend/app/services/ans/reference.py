@@ -33,6 +33,7 @@ Do not invent endpoints that aren't in the ANS docs.
 
 import asyncio
 import logging
+import re
 import time
 from collections.abc import Callable
 from typing import Literal
@@ -74,7 +75,10 @@ class ReferenceANSService:
             log.warning("ANS TL unreachable for %s: %s", ans_name, exc)
             if cached and age is not None and age < self._stale_ok:
                 # Still a real ANS answer, just not fresh. Flagged so the UI can say so.
-                return cached[1].model_copy(update={"cached": True, "stale": True})
+                return cached[1].model_copy(update={
+                    "cached": True, "stale": True, "verified": False, "ans_status": "UNREACHABLE",
+                    "detail": "Cached identity is stale; current lifecycle could not be verified",
+                })
             return IdentityResult(
                 ans_name=ans_name, verified=False, ans_status="UNREACHABLE", source="ans",
                 checked_at=utcnow(), detail=f"ANS Transparency Log unreachable: {type(exc).__name__}",
@@ -109,10 +113,12 @@ class ReferenceANSService:
                 )
             res.raise_for_status()
             badge = res.json()
+            if not isinstance(badge, dict):
+                raise ValueError("ANS badge must be a JSON object")
 
         status = str(badge.get("status", "UNKNOWN"))
         badge_name = badge.get("ansName") or badge.get("ans_name")
-        name_matches = badge_name is None or badge_name == ans_name
+        name_matches = isinstance(badge_name, str) and badge_name == ans_name
 
         # 3. Cryptographic receipt verification via the official offline verifier.
         tl_verified, verify_detail = await self._crypto_verify(agent_id)
@@ -140,6 +146,7 @@ class ReferenceANSService:
 
     async def _crypto_verify(self, agent_id: str) -> tuple[bool, str]:
         """Run `ans-verify -url {tl} -agent {id}`; success is exit 0 with a VERIFIED line."""
+        proc = None
         try:
             proc = await asyncio.create_subprocess_exec(
                 self._verify_bin, "-url", self._tl_url, "-agent", agent_id,
@@ -147,7 +154,7 @@ class ReferenceANSService:
             )
             raw, _ = await asyncio.wait_for(proc.communicate(), timeout=self._timeout)
             text = raw.decode(errors="replace")
-            if proc.returncode == 0 and "VERIFIED" in text.upper():
+            if proc.returncode == 0 and verifier_succeeded(text):
                 return True, "ok"
             last = text.strip().splitlines()[-1] if text.strip() else f"exit {proc.returncode}"
             return False, last[:200]
@@ -156,6 +163,14 @@ class ReferenceANSService:
             return False, f"ans-verify binary not found ({self._verify_bin})"
         except asyncio.TimeoutError:
             return False, "ans-verify timed out"
+        finally:
+            # Timeout/cancellation must not leave a verifier running in the background.
+            if proc is not None and proc.returncode is None:
+                try:
+                    proc.kill()
+                except ProcessLookupError:
+                    pass
+                await proc.communicate()
 
     async def warm_up(self, ans_names: list[str]) -> None:
         for name in ans_names:
@@ -167,3 +182,14 @@ class ReferenceANSService:
             self._cache.clear()
         else:
             self._cache.pop(ans_name, None)
+
+
+def verifier_succeeded(output: str) -> bool:
+    """Accept the exact success line documented in agentnameservice/ans README.
+
+    Unknown output formats fail closed and must be validated before adding support.
+    https://github.com/agentnameservice/ans/blob/main/README.md
+    """
+    return any(re.fullmatch(
+        r"\u2713 VERIFIED \(kid [0-9a-fA-F]{8} matched key directly\)", line.strip()
+    ) for line in output.splitlines())

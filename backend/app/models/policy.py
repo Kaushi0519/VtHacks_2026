@@ -7,12 +7,17 @@ The world file (simulator/fixtures/world.yaml) is validated against `World` at s
 from datetime import datetime
 from enum import StrEnum
 
-from pydantic import Field
+from pydantic import Field, ConfigDict, field_validator, model_validator
+from fnmatch import fnmatchcase
 
 from app.models.common import ApiModel, Sensitivity
 
 
-class Resource(ApiModel):
+class WorldConfigModel(ApiModel):
+    model_config = ConfigDict(extra="forbid")
+
+
+class Resource(WorldConfigModel):
     id: str  # e.g. "payroll-system"
     display_name: str
     scope_prefix: str  # first segment of scopes on this resource, e.g. "payroll"
@@ -21,7 +26,7 @@ class Resource(ApiModel):
     honeypot: bool = False  # stretch: deception resource
 
 
-class RolePolicy(ApiModel):
+class RolePolicy(WorldConfigModel):
     """Scope patterns use fnmatch syntax: "building.*", "payroll.salary.*"."""
 
     description: str = ""
@@ -30,7 +35,7 @@ class RolePolicy(ApiModel):
     forbidden: list[str] = Field(default_factory=list)  # hard deny + risk signal
 
 
-class RiskPolicy(ApiModel):
+class RiskPolicy(WorldConfigModel):
     """Transparent, hand-tuned heuristics. Not a calibrated model; never claim otherwise."""
 
     threshold_elevated: int = 30
@@ -64,6 +69,30 @@ class RiskPolicy(ApiModel):
     incident_min_signal_weight: int = 30
 
 
+    @field_validator("*")
+    @classmethod
+    def valid_numbers(cls, value, info):
+        name = info.field_name
+        if name == "ai_quarantine_min_confidence":
+            if not 0 <= value <= 1:
+                raise ValueError("confidence threshold must be between 0 and 1")
+        elif name.startswith(("threshold_", "weight_")) or name in ("risk_after_release", "incident_min_signal_weight"):
+            if not 0 <= value <= 100:
+                raise ValueError("risk values must be between 0 and 100")
+        elif name in ("signal_cooldown_seconds", "cooldown_per_minute"):
+            if not value >= 0:
+                raise ValueError("cooldown must be nonnegative")
+        elif not value > 0:
+            raise ValueError("window and rate parameters must be positive")
+        return value
+
+    @model_validator(mode="after")
+    def ordered_thresholds(self):
+        if not 0 < self.threshold_elevated < self.threshold_high < self.threshold_critical <= 100:
+            raise ValueError("risk thresholds must increase within 1..100")
+        return self
+
+
 class GrantKind(StrEnum):
     BASELINE = "baseline"  # standing, from role policy
     TEMPORARY = "temporary"  # just-in-time, decays
@@ -92,7 +121,7 @@ class PermissionGrant(ApiModel):
     end_reason: str | None = None  # ReasonCode value: TTL_ELAPSED | IDLE_TIMEOUT | OPERATOR_ACTION | ...
 
 
-class AgentSpec(ApiModel):
+class AgentSpec(WorldConfigModel):
     id: str
     display_name: str
     role: str
@@ -100,11 +129,11 @@ class AgentSpec(ApiModel):
     description: str = ""
     current_task: str = ""  # active assignment; Gemini judges whether behavior is consistent with it
     peers: list[str] = Field(default_factory=list)
-    expected_rpm: int = 6
-    initial_risk: int = 8
+    expected_rpm: int = Field(default=6, gt=0)
+    initial_risk: int = Field(default=8, ge=0, le=100)
 
 
-class AnsRegistryEntry(ApiModel):
+class AnsRegistryEntry(WorldConfigModel):
     """Used ONLY by the mock ANS adapter. Mirrors what is registered in real ANS."""
 
     ans_name: str
@@ -113,12 +142,12 @@ class AnsRegistryEntry(ApiModel):
     display_name: str | None = None
 
 
-class TenantInfo(ApiModel):
+class TenantInfo(WorldConfigModel):
     id: str
     name: str
 
 
-class World(ApiModel):
+class World(WorldConfigModel):
     tenant: TenantInfo
     resources: list[Resource]
     roles: dict[str, RolePolicy]
@@ -132,3 +161,29 @@ class World(ApiModel):
 
     def role(self, role: str) -> RolePolicy:
         return self.roles[role]
+
+
+    @model_validator(mode="after")
+    def consistent_world(self):
+        def unique(values, label):
+            if len(values) != len(set(values)):
+                raise ValueError(f"duplicate {label}")
+        unique([a.id for a in self.agents], "agent IDs")
+        unique([a.ans_name for a in self.agents], "agent ANS names")
+        unique([r.id for r in self.resources], "resource IDs")
+        unique([r.scope_prefix for r in self.resources], "resource prefixes")
+        unique([r.ans_name for r in self.ans_mock_registry], "registry ANS names")
+        unique([r.ans_agent_id for r in self.ans_mock_registry], "registry IDs")
+        agent_ids = {a.id for a in self.agents}
+        if agent_ids & {r.id for r in self.resources}:
+            raise ValueError("agent and resource IDs must be distinct")
+        for agent in self.agents:
+            if agent.role not in self.roles:
+                raise ValueError(f"unknown role for {agent.id}")
+            if not set(agent.peers) <= agent_ids:
+                raise ValueError(f"unknown peer for {agent.id}")
+        for name, role in self.roles.items():
+            for scope in role.baseline:
+                if any(fnmatchcase(scope, denied) or fnmatchcase(denied, scope) for denied in role.forbidden):
+                    raise ValueError(f"baseline conflicts with forbidden scope in {name}")
+        return self

@@ -67,6 +67,7 @@ async def reset(c: Container = Depends(get_container), _: str = Depends(require_
             seed_if_empty(db, c.world)
             db.commit()
         c.ans.invalidate()
+        c.analysis.invalidate()
     c.broadcaster.resync()
     return {"status": "reset", "agents": len(c.world.agents)}
 

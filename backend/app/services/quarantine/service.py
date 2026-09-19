@@ -33,6 +33,8 @@ def quarantine(
     triggered_by: str,  # "auto" | "operator"
     trace_id: str | None = None,
     parent_event_id: str | None = None,
+    reason_code: ReasonCode | None = None,
+    risk_before: int | None = None,
 ) -> Changes:
     changes = Changes()
     if agent.status == AgentStatus.QUARANTINED:
@@ -40,11 +42,11 @@ def quarantine(
 
     event = lifecycle_event(
         EventKind.QUARANTINE, agent.id, now,
-        reason_code=ReasonCode.RISK_THRESHOLD if triggered_by == "auto" else ReasonCode.OPERATOR_ACTION,
+        reason_code=reason_code or (ReasonCode.RISK_THRESHOLD if triggered_by == "auto" else ReasonCode.OPERATOR_ACTION),
         reason=reason,
         initiated_by="sentinel" if triggered_by == "auto" else "operator",
         trace_id=trace_id, parent_event_id=parent_event_id,
-        risk_before=agent.risk_score, risk_after=agent.risk_score,
+        risk_before=agent.risk_score if risk_before is None else risk_before, risk_after=agent.risk_score,
     )
     event.actor_ans_name = agent.ans_name
     incident, analyze = incidents.record(db, event, agent, rp, now)
@@ -88,12 +90,15 @@ def release(db: Session, agent: Agent, now: datetime, rp: RiskPolicy, *, note: s
     repo.save_agent(db, released)
     changes.agent(released)
     resolved = incidents.resolve(db, agent.id, now, note)
-    changes.events.append(repo.append_event(db, lifecycle_event(
+    event = repo.append_event(db, lifecycle_event(
         EventKind.RELEASE, agent.id, now,
         reason_code=ReasonCode.OPERATOR_ACTION, reason=note, initiated_by="operator",
         risk_before=agent.risk_score, risk_after=probation,
         incident_id=resolved.id if resolved else None,
-    )))
+    ))
+    changes.events.append(event)
     if resolved:
+        resolved = resolved.model_copy(update={"event_ids": [*resolved.event_ids, event.id]})
+        repo.save_incident(db, resolved)
         changes.incident(resolved)
     return changes
