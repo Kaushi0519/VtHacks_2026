@@ -4,7 +4,9 @@
 1. `make backend`, `make sim`, `make frontend` (three terminals). `.env`: `ALLOW_BACKFILL=true`,
    and `ANS_MODE=real` + `GEMINI_MODE=real` if keys work (the top bar must say **ANS LIVE**).
 2. `make backfill` (a week of history), then open `http://localhost:3000`.
-3. Confirm: all five agents green, risk under 10, **SYSTEM: SECURE**.
+3. Confirm: all five agents green and **SYSTEM: SECURE**. Four sit under 10; SchedulingAgent sits
+   around 27 (still LOW) because of its denied payroll attempts in the backfill — that is expected,
+   and step 5 is where you explain it.
 4. Rehearse with `make smoke` at least 3×. Keep a screen recording as backup.
 5. Demo bar shortcuts: **1 / 2 / 3** = script steps below, **A** = ambient traffic on/off, **R** = reset
    (press twice), **D** = hide the bar for a clean screen. A step that's already running can't be
