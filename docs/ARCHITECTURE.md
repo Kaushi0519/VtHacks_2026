@@ -82,32 +82,29 @@ and on `resync`. The broadcaster is in-memory, which is why we run **one uvicorn
 
 *Tradeoff vs WebSockets:* no bidirectional need (commands go over REST); SSE is simpler and robust.
 
-## 6. GoDaddy ANS integration (`services/ans/`, Person 3)
+## 6. ANS integration (`services/ans/`, Person 3) — see `docs/ANS.md` for the full runbook
 
 `ANSService.verify_agent(ansName) -> IdentityResult` is the only interface the rest of the code sees.
 `ANS_MODE=real|mock` selects the adapter; the UI shows which one is active.
 
-**Real adapter**. Endpoints are from GoDaddy's published ANS OpenAPI spec (developer.godaddy.com →
-REST reference → ANS, base `https://api.godaddy.com`, auth: PAT):
+**Real adapter** (`reference.py`) targets the **ANS reference implementation**
+(`github.com/agentnameservice/ans`), run locally — not a GoDaddy hosted API (that earlier assumption
+was wrong). Three parts: `ans-ra` (:18080, Registration Authority), `ans-tl` (:18081, Transparency
+Log, public read), and the `ans-verify` CLI (offline crypto verification).
 
-| Use | Endpoint |
+`verify_agent` does real cryptographic verification, not just a status check:
+
+| Step | Call |
 |---|---|
-| resolve name → agent | `POST /v1/agents/resolution` `{agentHost, version}` → `{ansName, links[rel=agent-details]}` |
-| lifecycle status | `GET /v1/agents/{agentId}` → `agentStatus ∈ PENDING_VALIDATION, PENDING_DNS, ACTIVE, FAILED, EXPIRED, REVOKED` |
-| register (setup, not runtime) | `POST /v1/agents/register` |
-| lifecycle feed (P2: sync revocations) | `GET /v1/agents/events` |
-| revoke (P2 kill switch, permanent!) | `POST /v1/agents/{agentId}/revoke` `{reason, comments}` |
-| discovery/search | `GET /v1/agents`, `/v1/ans/registered-agents/{agentId}` |
+| resolve name → agentId | world-registry map seeded at registration (dynamic resolve endpoint is a P2 swap) |
+| lifecycle status | `GET {tl}/v1/agents/{agentId}` → badge `status ∈ PENDING_VALIDATION, PENDING_DNS, ACTIVE, EXPIRED, REVOKED` (public read) |
+| **cryptographic proof** | `ans-verify -url {tl} -agent {agentId}` → Merkle inclusion + ES256 receipt check → `tlVerified` |
 
-`verified = resolves AND agentStatus == ACTIVE AND resolved name == claimed name`.
-Results are cached (`ANS_CACHE_TTL_SECONDS`, default 60s) and pre-warmed at startup. If ANS is
-unreachable, the last **real** answer is served for up to `ANS_STALE_OK_SECONDS`, flagged `stale`.
-With no cached answer, Sentinel **fails closed** (`IDENTITY_UNAVAILABLE`).
-*To verify at the event:* PAT header format, and whether `GET /v1/agents/{id}` is ownership-scoped.
-
-Open-source fallback: GoDaddy's reference implementation (`github.com/godaddy/ans`: registry,
-transparency log, verifier) can run locally. If we use it, present it as "the ANS reference
-implementation", not as GoDaddy's hosted service.
+`verified = status == ACTIVE AND name matches AND receipt VERIFIED`.
+Results are cached (`ANS_CACHE_TTL_SECONDS`, default 60s) and pre-warmed at startup. If the TL is
+unreachable, the last **real** answer is served for up to `ANS_STALE_OK_SECONDS`, flagged `stale`;
+with no cached answer, Sentinel **fails closed** (`UNREACHABLE`). Registration is a one-time setup
+step done with the reference impl's own tooling (`docs/ANS.md`), never at request time.
 
 **Mock adapter:** registry from `world.yaml → ansMockRegistry`, which mirrors what we registered in
 real ANS. Results carry `source: "mock"`.

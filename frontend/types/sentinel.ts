@@ -12,6 +12,7 @@ export interface IdentityResult {
   ansStatus: string; // ACTIVE | REVOKED | EXPIRED | NOT_FOUND | UNREACHABLE | INVALID_NAME | ...
   source: "ans" | "mock"; // "mock" must be labeled in the UI
   ansAgentId: string | null;
+  tlVerified: boolean; // Transparency-Log SCITT receipt cryptographically verified (real mode)
   checkedAt: string;
   cached: boolean;
   stale: boolean;

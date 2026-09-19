@@ -22,6 +22,7 @@ class IdentityResult(ApiModel):
     ans_status: AnsStatus
     source: Literal["ans", "mock"]  # "mock" must never be presented as a live ANS call
     ans_agent_id: str | None = None  # ANS registry UUID
+    tl_verified: bool = False  # Transparency-Log SCITT receipt cryptographically verified (real mode)
     checked_at: datetime
     cached: bool = False
     stale: bool = False  # served from cache because ANS was unreachable

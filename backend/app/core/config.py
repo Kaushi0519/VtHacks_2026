@@ -31,13 +31,19 @@ class Settings(BaseSettings):
     sweep_interval_seconds: float = 1.0
 
     # --- ANS identity (Person 3) ---
+    # Real ANS is the open reference implementation (github.com/agentnameservice/ans), run locally:
+    #   ans-ra :18080  Registration Authority (registration, identity certs, lifecycle)
+    #   ans-tl :18081  Transparency Log (agent badge + SCITT COSE_Sign1 receipts; public read)
+    #   ans-verify     offline CLI that cryptographically verifies a receipt (Merkle + ES256)
+    # (The earlier api.godaddy.com REST assumption was wrong; see docs/ANS.md.)
     ans_mode: Literal["real", "mock"] = "mock"
-    ans_base_url: str = "https://api.godaddy.com"
-    ans_api_key: str = ""  # PAT, or "key:secret" when ans_auth_scheme=sso-key
-    ans_auth_scheme: Literal["bearer", "sso-key"] = "bearer"
-    ans_timeout_seconds: float = 3.0
+    ans_ra_url: str = "http://localhost:18080"     # Registration Authority (setup/admin)
+    ans_tl_url: str = "http://localhost:18081"     # Transparency Log (verify path; public read)
+    ans_ra_api_key: str = "ans-dev-key-change-me"  # RA admin key; only registration needs it, not verify
+    ans_verify_bin: str = "ans-verify"             # path to the ans-verify binary
+    ans_timeout_seconds: float = 5.0
     ans_cache_ttl_seconds: int = 60
-    ans_stale_ok_seconds: int = 3600  # serve last *real* ANS answer if ANS is unreachable
+    ans_stale_ok_seconds: int = 3600  # serve last *real* ANS answer if the TL is unreachable
 
     # --- Gemini behavioral analysis (Person 3) ---
     gemini_mode: Literal["real", "mock"] = "mock"
