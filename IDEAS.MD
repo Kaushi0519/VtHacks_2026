@@ -32,3 +32,65 @@ Agent orchestration and ANS integration
 Data pipeline and Databricks
 Dashboard and UI
 Pitch, roadmap, and Deloitte-style narrative
+
+
+========================================
+CHOSEN DIRECTION: HokieBridge
+========================================
+Tracks: GoDaddy + Deloitte x Databricks + Best DEI Hack (+ Peraton as stretch)
+
+One-liner:
+    A student describes their situation in plain language ("I might lose my meal
+    plan and can't afford next semester"), and a mesh of verified specialist agents
+    finds the real campus + web resources they qualify for, translates bureaucratic
+    requirements into plain steps, and does it anonymously.
+
+Why each track is satisfied:
+
+    GoDaddy / ANS (technical centerpiece):
+        - Each resource domain is a separate agent with a verifiable, domain-anchored
+          ANS identity: FinancialAidAgent, DisabilityServicesAgent, FoodSecurityAgent,
+          HousingAgent, MentalHealthAgent.
+        - A Navigator agent discovers and verifies peers via ANS, then routes the
+          student's need to the right specialists.
+        - KILLER DEMO: a predatory "ScholarshipAgent" (really a phishing scam
+          harvesting SSNs) tries to inject a response and gets REJECTED because it
+          lacks a verified ANS identity. Real ANS usage, not a mention - and a genuine
+          DEI issue since financial scams disproportionately target first-gen and
+          low-income students.
+
+    Deloitte x Databricks:
+        - Databricks is the data layer: resource catalog, eligibility rules, deadlines,
+          with governance/lineage.
+        - A matching model ranks resources by eligibility fit.
+        - Present consultant-style: "pilot at VT -> scale to any campus" roadmap.
+
+    Best DEI Hack (the mission):
+        - Serves first-gen, low-income, disabled, transfer, international, and
+          undocumented students.
+        - Accessibility-first UI (screen-reader, WCAG, keyboard nav), anonymous by
+          default, plain-language translation of bureaucratic jargon.
+
+    Peraton (stretch -> makes it 4 tracks):
+        - Crisis path: if the navigator detects distress language, a mission-critical
+          guardrail escalates with a human-in-the-loop handoff to counseling + an
+          audit log + graceful failure when data is missing.
+
+Demo flow (90 seconds):
+    1. Student types their situation -> Navigator parses it
+    2. Routes to FoodSecurity + FinancialAid agents (discovered & ANS-verified)
+    3. Agents query Databricks -> return matched resources + deadlines + plain steps
+    4. Phishing "scholarship" impostor tries to respond -> ANS blocks it (show it)
+    5. Distress language triggers -> crisis escalation to human handoff + audit log
+    6. Toggle accessibility / anonymous mode to close
+
+4-person split:
+    1. Agents + ANS      - identity, discovery, verification, impostor rejection
+    2. Databricks        - resource catalog, eligibility data, governance, matching
+    3. Frontend/UX       - accessibility-first chat, anonymous mode, "blocked scam" visual
+    4. Pitch + Peraton   - guardrails, audit log, crisis path, DEI narrative, demo script
+
+Open decisions:
+    - Name: HokieBridge (placeholder) - confirm or change
+    - Scope: commit to Peraton crisis-path (4 tracks, more work) vs. keep as
+      "future enhancement" slide (3 tracks, safer)
