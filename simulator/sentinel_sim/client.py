@@ -12,11 +12,15 @@ import httpx
 from sentinel_sim.world import SimActor
 
 DEFAULT_URL = os.environ.get("SENTINEL_URL", "http://localhost:8000")
+# Only needed when the backend sets OPERATOR_TOKEN; operator routes 401 without it. Agent traffic
+# (the gateway) never sends it: an agent is not an operator.
+OPERATOR_TOKEN = os.environ.get("OPERATOR_TOKEN", "")
 
 
 class SentinelClient:
     def __init__(self, base_url: str = DEFAULT_URL, timeout: float = 15.0):
         self._http = httpx.AsyncClient(base_url=base_url.rstrip("/"), timeout=timeout)
+        self._operator = {"X-Operator-Token": OPERATOR_TOKEN} if OPERATOR_TOKEN else {}
 
     async def close(self) -> None:
         await self._http.aclose()
@@ -55,12 +59,13 @@ class SentinelClient:
         res = await self._http.post(
             f"/api/agents/{agent_id}/grants",
             json={"scope": scope, "ttlSeconds": ttl_seconds, "reason": reason, "grantedBy": granted_by},
+            headers=self._operator,
         )
         res.raise_for_status()
         return res.json()
 
     async def reset(self) -> None:
-        (await self._http.post("/api/admin/reset")).raise_for_status()
+        (await self._http.post("/api/admin/reset", headers=self._operator)).raise_for_status()
 
     async def resync(self) -> None:
-        (await self._http.post("/api/admin/resync")).raise_for_status()
+        (await self._http.post("/api/admin/resync", headers=self._operator)).raise_for_status()

@@ -88,9 +88,8 @@ draft weights before saving.
 - **I5 rehearsals:** 0 of 3 clean runs. Still to cover: steps 0–6 live with the demo bar
   (keys 1/2/3, A, R, D), recovery drills (reset mid-demo, simulator down, backend restart), then a
   backup screen recording.
-- **Simulator + `OPERATOR_TOKEN`:** operator routes (reset/grant/resync) are open while the token is
-  empty. If anyone sets it, `make smoke` and the demo buttons break until the simulator sends
-  `X-Operator-Token`. Already a P1 row on the task board.
+- **Ask Person 1** to add `OPERATOR_TOKEN=` to the simulator section of `.env.example` (config is
+  theirs to edit). The simulator reads it already; it's just undocumented for the next person.
 
 ## ⚠️ Known hazard during the demo
 `make backend` freezes after any backend file change (e.g. `git pull`) while a dashboard is open:
@@ -108,6 +107,9 @@ that event's risk before→after). Intentional, and it's the whole point: an age
 ---
 
 ## ✅ Closed
+- **Simulator + `OPERATOR_TOKEN`** — the simulator now sends `X-Operator-Token` on operator routes
+  (grant/reset/resync) when `OPERATOR_TOKEN` is set in its environment; agent traffic through the
+  gateway never sends it. Verified against a backend with a token: 401 without, PASSED with.
 - **G1** — `DEMO.md` step 3 claimed "risk under 10"; SchedulingAgent opens ~27 after backfill. Fixed
   in the script by me.
 - **G2** — same agent showed 27 on the dashboard card and 7 in accountability. Fixed by Kaushal

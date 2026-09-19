@@ -64,7 +64,7 @@ Until S1/S2 are done, run everything in `ANS_MODE=mock` — the full demo works 
 | Ambient traffic running during the demo | I | `ambient` scenario exists |
 | Grant/revoke UI buttons (JIT grant form) | P2 | ✅ Kiernan: grant form in inspector + "fix" button on the accountability report; revoke on grant cards |
 | Loading/error/offline states | I, P2 | |
-| Simulator sends `X-Operator-Token` when `OPERATOR_TOKEN` is set | I | operator routes (reset/grant/resync) are open while it's empty; set it and `make smoke` + demo buttons fail |
+| ✅ Simulator sends `X-Operator-Token` when `OPERATOR_TOKEN` is set | I | operator routes (reset/grant/resync) are open while it's empty; set it and `make smoke` + demo buttons fail |
 | Postgres via `DATABASE_URL` (only if needed) | P1 | |
 
 ## P2: stretch (don't start before P0 is green)
