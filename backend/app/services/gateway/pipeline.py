@@ -59,6 +59,9 @@ class Gateway:
                 response, changes = self._decide(db, req, identity, now, trace_id, backfill)
                 db.commit()
 
+        # Log only after the commit succeeds, so we never log a decision the DB rejected.
+        if changes.decision_event is not None:
+            log_event(changes.decision_event)
         if backfill:
             return response  # history seeding: no live broadcast, no AI calls (see /api/admin/resync)
         changes.publish(c.broadcaster)
@@ -142,10 +145,14 @@ class Gateway:
             profile = learn(profile, req.action, resource.id if resource else None, req.target_agent_id, now)
             result = {"status": "executed", "simulated": True}
             event.metadata["result"] = "executed (simulated)"
-        if perm.grant is not None and decision in (Decision.ALLOW, Decision.REQUIRE_HUMAN):
-            used = touch(perm.grant, now)  # feeds idle-decay and "unused permission" findings
-            repo.save_grant(db, used)
-            changes.grant(used)
+            if perm.grant is not None:
+                # Record which grant authorized this request (audit completeness) and count the use.
+                # Only a real execution touches the grant: a require_human decision executed nothing,
+                # so it must NOT refresh the idle timer and keep decaying access alive.
+                event.grant_id = perm.grant.id
+                used = touch(perm.grant, now)  # feeds idle-decay and "unused permission" findings
+                repo.save_grant(db, used)
+                changes.grant(used)
         repo.save_profile(db, profile)
 
         agent = agent.model_copy(update={
@@ -169,7 +176,7 @@ class Gateway:
             agent = changes.agents.get(agent.id, agent)
 
         self._finalize(db, changes, backfill)
-        log_event(event)
+        changes.decision_event = event
         return _response(event, agent, result), changes
 
     def _deny_early(
@@ -190,7 +197,7 @@ class Gateway:
             if analyze:
                 changes.analyze_incident_ids.append(incident.id)
         self._finalize(db, changes, backfill)
-        log_event(event)
+        changes.decision_event = event
         return _response(event, agent, None), changes
 
     def _finalize(self, db: Session, changes: Changes, backfill: bool) -> None:

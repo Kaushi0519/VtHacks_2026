@@ -22,19 +22,31 @@ class AnalysisRunner:
     def __init__(self, c: Container):
         self.c = c
         self._tasks: set[asyncio.Task] = set()
+        self._inflight: set[str] = set()
 
     def schedule(self, incident_id: str) -> None:
+        # Dedup: rapid escalation (incident opens, then escalates to quarantine) can ask to analyze
+        # the same incident twice. One in-flight analysis per incident avoids duplicate Gemini calls
+        # and duplicate ANALYSIS events/telemetry.
+        if incident_id in self._inflight:
+            return
+        self._inflight.add(incident_id)
         task = asyncio.create_task(self._run(incident_id))
         self._tasks.add(task)
-        task.add_done_callback(self._tasks.discard)
+
+        def _done(t: asyncio.Task) -> None:
+            self._tasks.discard(t)
+            self._inflight.discard(incident_id)
+
+        task.add_done_callback(_done)
 
     async def _run(self, incident_id: str) -> None:
         c = self.c
         try:
             with c.session_factory() as db:
                 incident = repo.get_incident(db, incident_id)
-                if incident is None:
-                    return
+                if incident is None or incident.analysis_status == "done":
+                    return  # incident gone (demo reset) or already analyzed by an earlier run
                 telemetry = incident_telemetry(db, c.world, incident)
 
             analysis = await c.analyzer.analyze_incident(telemetry)

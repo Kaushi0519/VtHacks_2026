@@ -3,7 +3,7 @@ from datetime import timedelta
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_container, get_db
+from app.api.deps import get_container, get_db, require_operator
 from app.container import Container
 from app.core.ids import utcnow
 from app.db import repo
@@ -56,9 +56,11 @@ def snapshot(c: Container = Depends(get_container), db: Session = Depends(get_db
 
 
 @router.post("/admin/reset")
-async def reset(c: Container = Depends(get_container)) -> dict:
+async def reset(c: Container = Depends(get_container), _: str = Depends(require_operator)) -> dict:
     """Demo reset: wipe state, reload the world file, reseed. Clients get a `resync` message."""
     async with c.state_lock:
+        # reload_world() validates the world file (Pydantic) BEFORE we drop anything, so a bad world
+        # file fails here and leaves the current DB intact rather than wiping it into an empty state.
         c.reload_world()
         drop_and_create_tables(c.engine)
         with c.session_factory() as db:
@@ -70,7 +72,7 @@ async def reset(c: Container = Depends(get_container)) -> dict:
 
 
 @router.post("/admin/resync")
-def resync(c: Container = Depends(get_container)) -> dict:
+def resync(c: Container = Depends(get_container), _: str = Depends(require_operator)) -> dict:
     """Tell dashboards to refetch /api/snapshot (used after history backfill)."""
     c.broadcaster.resync()
     return {"status": "ok"}

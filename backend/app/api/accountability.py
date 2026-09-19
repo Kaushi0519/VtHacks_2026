@@ -1,6 +1,6 @@
 from datetime import timedelta
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_container, get_db
@@ -28,6 +28,10 @@ def agent_report(
     c: Container = Depends(get_container),
     db: Session = Depends(get_db),
 ) -> AgentReport:
-    """Works for unknown actor ids too (known=false)."""
+    """Works for unknown actor ids that actually appear in the ledger (known=false). An id with no
+    agent and no activity at all is a 404, not a fake 'unverified identity' finding."""
     end = utcnow()
-    return accountability.agent_report(db, c.world, agent_id, end - timedelta(days=days), end)
+    report = accountability.agent_report(db, c.world, agent_id, end - timedelta(days=days), end)
+    if not report.known and report.totals.requests == 0:
+        raise HTTPException(404, f"no enrolled agent or recorded activity for {agent_id!r}")
+    return report

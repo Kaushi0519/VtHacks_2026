@@ -16,6 +16,7 @@ class Changes:
     grants: dict[str, PermissionGrant] = field(default_factory=dict)
     incidents: dict[str, Incident] = field(default_factory=dict)
     analyze_incident_ids: list[str] = field(default_factory=list)
+    decision_event: SentinelEvent | None = None  # the request event, logged after commit
 
     def agent(self, a: Agent) -> None:
         self.agents[a.id] = a

@@ -22,6 +22,10 @@ class Settings(BaseSettings):
     )
 
     # --- Core / gateway (Person 1) ---
+    # If set, operator/admin routes (quarantine, release, grant, revoke, reset, resync) require a
+    # matching `X-Operator-Token` header. Empty = open, for the local demo. Set it for any shared/
+    # deployed instance so nobody can release quarantines or wipe the ledger anonymously.
+    operator_token: str = ""
     database_url: str = f"sqlite:///{REPO_ROOT / 'backend' / 'sentinel.db'}"
     world_file: Path = REPO_ROOT / "simulator" / "fixtures" / "world.yaml"
     cors_origins: list[str] = ["http://localhost:3000", "http://127.0.0.1:3000"]

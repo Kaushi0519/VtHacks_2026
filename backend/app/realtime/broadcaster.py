@@ -37,8 +37,24 @@ class Broadcaster:
             try:
                 q.put_nowait(message)
             except asyncio.QueueFull:
-                log.warning("dropping slow SSE subscriber")
-                self._subscribers.discard(q)
+                # A slow/stuck consumer must not be left silently stranded receiving only heartbeats
+                # (connected-looking but permanently stale). Drain it and hand it a single resync so
+                # the client refetches /api/snapshot and recovers the full current state.
+                self._force_resync(q)
+
+    def _force_resync(self, q: asyncio.Queue[str]) -> None:
+        try:
+            while True:
+                q.get_nowait()
+        except asyncio.QueueEmpty:
+            pass
+        resync = json.dumps({"type": StreamType.RESYNC.value, "data": {}})
+        try:
+            q.put_nowait(resync)
+            log.warning("SSE subscriber overflowed; forced a resync")
+        except asyncio.QueueFull:  # nothing is draining it at all — give up
+            self._subscribers.discard(q)
+            log.warning("dropping unresponsive SSE subscriber")
 
     # Typed helpers. Publish order within one operation: event -> agent -> grant -> incident.
     def event(self, e: SentinelEvent) -> None:

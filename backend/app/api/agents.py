@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_container, get_db
+from app.api.deps import get_container, get_db, require_operator
 from app.container import Container
 from app.core.ids import utcnow
 from app.db import repo
@@ -33,7 +33,12 @@ def get_agent(agent_id: str, db: Session = Depends(get_db)) -> AgentDetail:
 
 
 @router.post("/agents/{agent_id}/quarantine", response_model=Agent)
-async def quarantine_agent(agent_id: str, cmd: QuarantineCommand, c: Container = Depends(get_container)) -> Agent:
+async def quarantine_agent(
+    agent_id: str,
+    cmd: QuarantineCommand,
+    c: Container = Depends(get_container),
+    _: str = Depends(require_operator),
+) -> Agent:
     """Operator kill switch (Sentinel-level isolation)."""
     async with c.state_lock:
         with c.session_factory() as db:
@@ -49,7 +54,12 @@ async def quarantine_agent(agent_id: str, cmd: QuarantineCommand, c: Container =
 
 
 @router.post("/agents/{agent_id}/release", response_model=Agent)
-async def release_agent(agent_id: str, cmd: ReleaseCommand, c: Container = Depends(get_container)) -> Agent:
+async def release_agent(
+    agent_id: str,
+    cmd: ReleaseCommand,
+    c: Container = Depends(get_container),
+    _: str = Depends(require_operator),
+) -> Agent:
     async with c.state_lock:
         with c.session_factory() as db:
             agent = _require_agent(db, agent_id)
@@ -65,8 +75,16 @@ def list_agent_grants(agent_id: str, db: Session = Depends(get_db)) -> list[Perm
 
 
 @router.post("/agents/{agent_id}/grants", response_model=PermissionGrant, status_code=201)
-async def issue_grant(agent_id: str, cmd: GrantCommand, c: Container = Depends(get_container)) -> PermissionGrant:
+async def issue_grant(
+    agent_id: str,
+    cmd: GrantCommand,
+    c: Container = Depends(get_container),
+    principal: str = Depends(require_operator),
+) -> PermissionGrant:
     """Just-in-time, decaying permission. Must be within the role's `grantable` scopes."""
+    # Attribution is set server-side from the authenticated principal; a client-supplied grantedBy
+    # is never trusted (it would let anyone forge who issued a grant in the audit log).
+    cmd = cmd.model_copy(update={"granted_by": principal})
     async with c.state_lock:
         with c.session_factory() as db:
             agent = _require_agent(db, agent_id)
@@ -89,7 +107,12 @@ def list_grants(
 
 
 @router.post("/grants/{grant_id}/revoke", response_model=PermissionGrant)
-async def revoke_grant(grant_id: str, cmd: RevokeCommand, c: Container = Depends(get_container)) -> PermissionGrant:
+async def revoke_grant(
+    grant_id: str,
+    cmd: RevokeCommand,
+    c: Container = Depends(get_container),
+    _: str = Depends(require_operator),
+) -> PermissionGrant:
     async with c.state_lock:
         with c.session_factory() as db:
             grant = repo.get_grant(db, grant_id)
