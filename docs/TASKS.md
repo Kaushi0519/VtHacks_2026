@@ -28,7 +28,7 @@ Status: ⬜ todo · 🟨 in progress (add your name) · ✅ done. Update it in t
 | I1 | Run everything locally; walk each scenario from the CLI (pair with P1) | I | - | can explain each step's decision | `simulator/` | ⬜ |
 | I2 | Scenario polish: pacing, captions, expectations; keep smoke green | I | I1 | `make smoke` passes 3× in a row | `simulator/sentinel_sim/scenarios/*` | ⬜ |
 | I3 | History backfill stories (see file docstring) | I | I1 | overview shows all 5 intended hypotheses | `scenarios/history_backfill.py`, `world.yaml` | ⬜ |
-| I4 | Demo controls: captions/progress from `GET /runs`, keyboard toggle, reset flow | I | - | presenter can run the demo with only this panel | `components/demo/DemoControls.tsx` | ⬜ |
+| I4 | Demo controls: captions/progress from `GET /runs`, keyboard toggle, reset flow | I | - | presenter can run the demo with only this panel | `components/demo/DemoControls.tsx` | ✅ Kiernan (for Ishan) |
 | I5 | Rehearsal owner: run DEMO.md end-to-end, log every glitch as a task | I | all | 3 clean run-throughs | `docs/DEMO.md` | ⬜ |
 
 ### ANS setup checklist (S1 + S2) — full runbook in `docs/ANS.md`

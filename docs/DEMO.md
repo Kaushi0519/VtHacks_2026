@@ -6,6 +6,9 @@
 2. `make backfill` (a week of history), then open `http://localhost:3000`.
 3. Confirm: all five agents green, risk under 10, **SYSTEM: SECURE**.
 4. Rehearse with `make smoke` at least 3×. Keep a screen recording as backup.
+5. Demo bar shortcuts: **1 / 2 / 3** = script steps below, **A** = ambient traffic on/off, **R** = reset
+   (press twice), **D** = hide the bar for a clean screen. A step that's already running can't be
+   started twice, so a nervous double-click is harmless.
 
 ## Script
 

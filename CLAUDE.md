@@ -44,7 +44,9 @@ its Behavioral Risk Score spikes, and Sentinel quarantines it.
   ⏱ badge on the agent card, grant cards with revoke in the inspector; red flash + fade on expiry).
   F5 done: accountability page (7-day KPI strip, fleet sorted worst-first with hypothesis badges +
   plain-English meaning, agent report with findings / risk sparkline / denial reasons / scope usage,
-  filterable paged audit log). All frontend P0 tasks (F1–F5) are done; next are the P1 items.
+  filterable paged audit log). All frontend P0 tasks (F1–F5) are done, plus the JIT grant form (P1)
+  and Ishan's I4 demo bar (script steps 1/2/3, ambient toggle, double-click guard, live captions,
+  confirm-to-reset, D hides it).
 - **Not started:** everything in "Stretch" below.
 - `IDEAS.MD` is the team's original brainstorm. The plan is Sentinel Mesh; the MVP scope below is
   what we build first.

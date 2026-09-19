@@ -54,14 +54,24 @@ export function PacketEdge(p: EdgeProps<Edge<PacketEdgeData>>) {
   const color = PACKET_COLOR[decision];
   const blocked = decision !== "allow";
   const motion = useRef<SVGAnimateMotionElement>(null);
+  const dot = useRef<SVGCircleElement>(null);
 
   // SMIL animations added after page load must be started by hand, or they "already finished".
-  useLayoutEffect(() => motion.current?.beginElement(), []);
+  // The dot stays hidden until the animation has really started: an unstarted dot would sit at
+  // the graph origin as a stray marker.
+  useLayoutEffect(() => {
+    try {
+      motion.current?.beginElement();
+      dot.current?.setAttribute("visibility", "visible");
+    } catch {
+      /* animation unavailable: leave the dot hidden, the trail still shows the decision */
+    }
+  }, []);
 
   return (
     <g className="packet pointer-events-none">
       <path d={path} fill="none" stroke={color} strokeWidth={2} className="packet-trail" />
-      <circle r={5} fill={color} style={{ filter: `drop-shadow(0 0 6px ${color})` }}>
+      <circle ref={dot} r={5} fill={color} visibility="hidden" style={{ filter: `drop-shadow(0 0 6px ${color})` }}>
         <animateMotion
           ref={motion}
           begin="indefinite"

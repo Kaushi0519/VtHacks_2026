@@ -57,5 +57,6 @@ export const sim = {
   scenarios: () => call<ScenarioInfo[]>(SIM_URL, "/scenarios"),
   run: (id: string) => call<RunState>(SIM_URL, `/scenarios/${id}/run`, post()),
   runs: () => call<RunState[]>(SIM_URL, "/runs"),
+  stop: (runId: string) => call<RunState>(SIM_URL, `/runs/${runId}/stop`, post()),
   stopAll: () => call<{ stopped: number }>(SIM_URL, "/runs/stop-all", post()),
 };
