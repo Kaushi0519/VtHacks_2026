@@ -89,15 +89,29 @@ event → agent → grant → incident. Backfilled history is not streamed (even
   riskBefore, riskAfter, signals: RiskSignal[], incidentId, grantId,
   initiatedBy: "gateway"|"sentinel"|"operator"|"analyzer", metadata }
 ```
+`metadata` is an open bag of stable, documented keys (not free-form):
+- `metadata.backfill: true` — seeded history, not streamed live.
+- `metadata.analysis: BehaviorAnalysis` — present on **every** `analysis` event (and only those),
+  including semantic reviews that open no incident (`incidentId: null`). This is the canonical place
+  to read the finding off a raw event; the UI depends on it. `metadata.analysisStatus: "done"`
+  accompanies it on the incident record.
 
 ## Behavioral analysis (Gemini structured output → `BehaviorAnalysis`)
 ```json
 { "anomalyType": "role_resource_mismatch", "severity": "high", "confidence": 0.94,
+  "violations": ["task_deviation", "suspicious_data_aggregation"],
   "reason": "Facilities agent requested payroll salary data outside its observed role.",
-  "recommendedAction": "quarantine", "source": "gemini", "model": "gemini-3.5-flash",
+  "recommendedAction": "quarantine", "source": "gemini", "model": "gemini-flash-lite-latest",
   "analyzedAt": "…", "error": null }
 ```
-`source: "fallback"` means rule-based (Gemini off or failed). The UI must label it.
+`source: "fallback"` means rule-based (Gemini off or failed). The UI must label it. `violations` are
+short semantic tags Gemini named; render them as-is (empty on the rule-based fallback).
+
+An **AI-triggered quarantine** (Gemini decided, not a hard rule) is identifiable without guessing:
+the quarantine event's `reason` starts with `"Gemini semantic analysis flagged …"` and its
+accompanying `analysis` has `source: "gemini"`, `severity: "critical"`, `recommendedAction:
+"quarantine"`. Anything short of that (e.g. a rule-triggered quarantine that merely carries an
+advisory Gemini finding) must not be presented as AI-decided.
 
 ## Simulator control API (`:8001`, separate process)
 
