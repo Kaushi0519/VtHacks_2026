@@ -25,9 +25,15 @@ its Behavioral Risk Score spikes, and Sentinel quarantines it.
   / risk / quarantine / permission decay → events → SSE → dashboard + accountability page.
   `make test` (18 tests) and `make smoke` (full demo with checks) pass.
 - **Solid:** backend pipeline, contracts, simulator scenarios + 7-day history backfill.
-- **Written but NOT yet verified live:** GoDaddy ANS adapter (`ANS_MODE=real`; needs a PAT and
-  registered agents) and the Gemini analyzer (`GEMINI_MODE=real`; needs a key). Both currently run
-  as mock / rule-based, and the UI says so.
+- **ANS overhauled to real ANS (P3 to stand up):** the old `api.godaddy.com` adapter was wrong; real
+  ANS is the reference implementation (`github.com/agentnameservice/ans`), run locally — no PAT/DNS.
+  New adapter `services/ans/reference.py` (TL badge + `ans-verify` crypto), matches the v2 OpenAPI.
+  Still `ANS_MODE=mock` until P3 does S1/S2: build/run the stack, register 5 agents → `world.yaml`,
+  validate the 3 `TODO(P3, P0)` in `reference.py`. Full runbook: `docs/ANS.md`.
+- **Gemini verified working live:** `GEMINI_MODE=real` produces real analysis (5/5 incidents
+  `source:"gemini"`). Model is `gemini-flash-lite-latest` (flash-latest 503s under load, 2.5-flash is
+  retired). Needs a free key (aistudio.google.com/apikey) in each person's `.env`; `mock` needs none.
+  Remaining (P3): prompt tuning, 503 retry/pre-cache hardening, and the `AI_ASSESSMENT` risk signal.
 - **Bare-bones:** the frontend works but is unstyled; making it a polished mission control is the
   main frontend work.
 - **Not started:** everything in "Stretch" below.
