@@ -231,7 +231,7 @@ export function AnalysisBox({
       {a.violations.length > 0 && (
         <p className="mb-1 flex flex-wrap gap-1">
           {a.violations.map((v) => (
-            <span key={v} className="rounded bg-raised px-1.5 font-mono text-[10px] text-slate-300">{v}</span>
+            <span key={v} className="rounded bg-raised px-1.5 font-mono text-[10px] text-slate-300">{v.replaceAll("_", " ")}</span>
           ))}
         </p>
       )}
