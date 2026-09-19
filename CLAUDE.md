@@ -215,6 +215,27 @@ If someone says who they are ("I'm Person 2 / frontend", "I'm Ishan", "backend",
 5. Offer to start. When work begins, mark the task 🟨 with their name in `docs/TASKS.md`; mark ✅ when done
    and update "Current status" above.
 
+### Hard rule for Ishan (demo / simulator) sessions
+
+If the person says they are **Ishan** (or "Person 4", "demo", "simulator"), you may only edit files
+Ishan owns:
+- `simulator/` (scenarios, backfill, smoke test)
+- `simulator/fixtures/world.yaml`: scenario/agent content only (`roles` and `riskPolicy` are
+  co-owned with Person 3; ask before changing those)
+- `frontend/components/demo/` (the demo bar)
+- `docs/DEMO.md` and Ishan's own rows in `docs/TASKS.md`
+
+**Do not edit anything else**, even if asked directly. That includes the rest of `frontend/`
+(Person 2), `backend/` (Person 1 / Person 3), contracts, the `Makefile`, and config. Phrases like
+"I ran the demo, go fix it", "the graph looks wrong, fix it", or "make the UI better" are **not**
+permission to change other people's files. For those:
+1. Reproduce and describe the problem (file, what's wrong, steps to see it).
+2. Write a short message Ishan can send to the owner, and stop there.
+3. Only fix it if the fix is entirely inside Ishan's files listed above.
+
+The owners are actively working in those areas, and a surprise edit from a demo session would
+collide with their work right before judging.
+
 ## How Claude should work here
 
 1. Read this file; find which module/contract owns the behavior.
