@@ -34,6 +34,19 @@ just needs to know the difference between "never needed it" and "asked and is wa
 Not fixable inside Ishan's files: it's `findings.py` (Person 3) or the `payroll` role in
 `world.yaml` (co-owned with Person 3).
 
+### G4 — "open" in the accountability Incidents list looks like a button (sent to Person 2)
+In an agent report, each incident row ends with the word `open`, which is the incident **status**
+(`AgentReportPanel.tsx`, `{i.status}`), not a control. Because the title next to it is truncated,
+it reads like a "show more" link, and clicking does nothing. I clicked it repeatedly before reading
+the code; a judge will too. Suggestion: style status as a badge (● OPEN / RESOLVED) and make the row
+itself open the incident, since a long title currently can't be read in full anywhere on that page.
+
+### Not a bug: the inspector shows different things by design
+Clicking an agent in the mesh shows its *current* identity/behavior; clicking a decision in the live
+feed shows the state *at that request* (`IdentityCard` takes `atRequest`, `BehaviorCard` shows that
+event's risk before→after). Intended, and it's the point: an agent can be verified at 10:02 and
+quarantined at 10:04. Nothing to fix — worth saying out loud in the demo.
+
 ### Verified good
 - All 5 backfill stories resolve: `scheduling-agent` likely_misconfigured, `analytics-agent`
   over_privileged, `facilities-agent` + `database-agent` healthy, and both unknown actors
