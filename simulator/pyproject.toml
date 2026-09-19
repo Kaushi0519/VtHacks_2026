@@ -1,0 +1,14 @@
+[project]
+name = "sentinel-sim"
+version = "0.1.0"
+description = "Simulated hospital AI agents that route every action through the Sentinel gateway"
+requires-python = ">=3.11"
+dependencies = [
+  "httpx>=0.27",
+  "fastapi>=0.115",
+  "uvicorn[standard]>=0.30",
+  "pyyaml>=6.0",
+]
+
+[tool.uv]
+package = false

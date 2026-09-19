@@ -1,0 +1,130 @@
+# Sentinel Mesh demo tenant: a hospital running five AI agents.
+#
+# Owner: Ishan (demo data). Person 3 co-owns `roles` and `riskPolicy` (security semantics).
+# Read by BOTH the backend (seeding, policy, graph) and the simulator (who can act).
+# Validated at backend startup against backend/app/models/policy.py::World. A typo fails fast.
+# After editing: POST /api/admin/reset (or `make reset`) reloads it without restarting.
+#
+# Scope format: <resourcePrefix>.<thing>.<verb>, e.g. payroll.salary.read
+# Patterns use fnmatch: "building.*" matches building.lights.write
+
+tenant:
+  id: mercy-general
+  name: Mercy General Hospital
+
+resources:
+  - id: building-mgmt
+    displayName: Building Management
+    scopePrefix: building
+    sensitivity: low
+  - id: scheduling-system
+    displayName: Staff Scheduling
+    scopePrefix: schedule
+    sensitivity: medium
+  - id: hr-directory
+    displayName: HR Directory
+    scopePrefix: hr
+    sensitivity: high
+  - id: payroll-system
+    displayName: Payroll & Compensation
+    scopePrefix: payroll
+    sensitivity: critical
+    requiresHuman: ["payroll.salary.write"]
+  - id: ehr
+    displayName: Patient Records (EHR)
+    scopePrefix: patient
+    sensitivity: critical
+  - id: analytics-warehouse
+    displayName: Analytics Warehouse
+    scopePrefix: analytics
+    sensitivity: medium
+  # Stretch (honeypot). Not granted to anyone; any touch is highly suspicious.
+  - id: credential-vault
+    displayName: finance_master_credentials
+    scopePrefix: vault
+    sensitivity: critical
+    honeypot: true
+
+roles:
+  facilities:
+    description: Lighting, HVAC and energy across hospital buildings
+    baseline: [building.lights.read, building.lights.write, building.energy.read, building.hvac.read, building.hvac.write]
+    grantable: ["building.*"]
+    forbidden: ["payroll.*", "patient.*", "hr.*", "vault.*"]
+  payroll:
+    description: Computes and pays staff compensation
+    baseline: [payroll.salary.read, payroll.salary.write, payroll.hours.read, schedule.shifts.read, hr.employee.read]
+    forbidden: ["patient.*", "building.*", "vault.*"]
+  scheduling:
+    description: Builds nurse and staff shift schedules
+    baseline: [schedule.shifts.read, schedule.shifts.write, hr.employee.read]
+    grantable: [payroll.hours.write]
+    forbidden: ["payroll.salary.*", "patient.*", "vault.*"]
+  analytics:
+    description: Operational reporting across departments
+    baseline: [analytics.reports.read, analytics.reports.write, analytics.warehouse.read, building.energy.read]
+    grantable: [patient.records.read]  # just-in-time only: this is the permission-decay demo
+    forbidden: ["payroll.salary.*", "vault.*"]
+  data:
+    description: Brokers queries to the warehouse and EHR
+    baseline: [analytics.warehouse.read, analytics.warehouse.write, patient.records.read]
+    forbidden: ["payroll.*", "vault.*"]
+
+agents:
+  - id: facilities-agent
+    displayName: FacilitiesAgent
+    role: facilities
+    ansName: ans://v1.0.0.facilities.demo-hospital.example  # TODO(P3): real ANS names once registered
+    description: Controls lighting, HVAC and energy across hospital buildings.
+    peers: [scheduling-agent]
+    expectedRpm: 6
+    initialRisk: 8
+  - id: payroll-agent
+    displayName: PayrollAgent
+    role: payroll
+    ansName: ans://v1.0.0.payroll.demo-hospital.example
+    description: Runs payroll from approved hours and salary bands.
+    peers: [scheduling-agent]
+    expectedRpm: 4
+    initialRisk: 6
+  - id: scheduling-agent
+    displayName: SchedulingAgent
+    role: scheduling
+    ansName: ans://v1.0.0.scheduling.demo-hospital.example
+    description: Builds shift schedules and reports worked hours.
+    peers: [payroll-agent, facilities-agent]
+    expectedRpm: 6
+    initialRisk: 7
+  - id: analytics-agent
+    displayName: AnalyticsAgent
+    role: analytics
+    ansName: ans://v1.0.0.analytics.demo-hospital.example
+    description: Produces operational reports; needs patient data only for specific reports.
+    peers: [database-agent]
+    expectedRpm: 5
+    initialRisk: 9
+  - id: database-agent
+    displayName: DatabaseAgent
+    role: data
+    ansName: ans://v1.0.0.database.demo-hospital.example
+    description: Executes approved queries against the warehouse and EHR.
+    peers: [analytics-agent]
+    expectedRpm: 10
+    initialRisk: 5
+
+# Behavioral risk heuristics. Defaults live in models/policy.py::RiskPolicy; override here.
+riskPolicy:
+  thresholdElevated: 30
+  thresholdHigh: 60
+  thresholdCritical: 80
+
+# Used ONLY when ANS_MODE=mock. Keep in sync with what is registered in real GoDaddy ANS so both
+# modes behave the same. The fake agent in the demo is intentionally NOT listed here.
+ansMockRegistry:
+  - {ansName: "ans://v1.0.0.facilities.demo-hospital.example", ansAgentId: "0f7c2a1e-0000-4000-8000-000000000001"}
+  - {ansName: "ans://v1.0.0.payroll.demo-hospital.example", ansAgentId: "0f7c2a1e-0000-4000-8000-000000000002"}
+  - {ansName: "ans://v1.0.0.scheduling.demo-hospital.example", ansAgentId: "0f7c2a1e-0000-4000-8000-000000000003"}
+  - {ansName: "ans://v1.0.0.analytics.demo-hospital.example", ansAgentId: "0f7c2a1e-0000-4000-8000-000000000004"}
+  - {ansName: "ans://v1.0.0.database.demo-hospital.example", ansAgentId: "0f7c2a1e-0000-4000-8000-000000000005"}
+  # A real, ACTIVE ANS agent that belongs to someone else: tests AGENT_NOT_ENROLLED.
+  - {ansName: "ans://v1.0.0.courier.partner-clinic.example", ansAgentId: "0f7c2a1e-0000-4000-8000-0000000000aa"}
