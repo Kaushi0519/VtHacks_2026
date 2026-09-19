@@ -14,8 +14,9 @@ import { agentPosition, COLUMN_X, ghostPosition, HEADER_Y, INK, resourcePosition
 import { nodeTypes } from "./nodes";
 import { usePulses, type Pulse } from "./usePulses";
 
-// maxZoom keeps the mesh from ballooning on big screens next to the fixed-size side panels.
-const FIT = { padding: 0.08, maxZoom: 1.05 };
+// maxZoom keeps the mesh from ballooning on big screens next to the fixed-size side panels; 1.05
+// was low enough that the mesh stopped growing well before it filled the panel.
+const FIT = { padding: 0.06, maxZoom: 1.3 };
 // Unknown callers stay in the "unverified callers" column this long after their last incident.
 const GHOST_WINDOW_MS = 15 * 60_000;
 
