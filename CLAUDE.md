@@ -16,6 +16,41 @@ Demo tenant: a hospital with FacilitiesAgent, PayrollAgent, SchedulingAgent, Ana
 DatabaseAgent. The "wow": the real, ANS-verified FacilitiesAgent requests `payroll.salary.read`,
 its Behavioral Risk Score spikes, and Sentinel quarantines it.
 
+## Current status (keep this section up to date; last updated 2026-09-19)
+
+**Every session: run `git checkout main && git pull --rebase` first, then read this section and
+`docs/TASKS.md`.**
+
+- The scaffold is merged on `main` and **runs end to end in mock mode**: simulator → gateway → policy
+  / risk / quarantine / permission decay → events → SSE → dashboard + accountability page.
+  `make test` (18 tests) and `make smoke` (full demo with checks) pass.
+- **Solid:** backend pipeline, contracts, simulator scenarios + 7-day history backfill.
+- **Written but NOT yet verified live:** GoDaddy ANS adapter (`ANS_MODE=real`; needs a PAT and
+  registered agents) and the Gemini analyzer (`GEMINI_MODE=real`; needs a key). Both currently run
+  as mock / rule-based, and the UI says so.
+- **Bare-bones:** the frontend works but is unstyled; making it a polished mission control is the
+  main frontend work.
+- **Not started:** everything in "Stretch" below.
+- `IDEAS.MD` is the team's original brainstorm. The plan is Sentinel Mesh; the MVP scope below is
+  what we build first.
+- **Next steps:** each person starts their first P0 task in `docs/TASKS.md` on their own branch
+  (Person 1 `backend/…`, Person 2 `frontend/…`, Person 3 `security/…`, Ishan `demo/…`). When you
+  finish a task, mark it ✅ in `docs/TASKS.md` and update this section in the same commit.
+
+## First-time setup on a new machine
+
+Needs: git, Node 20+, [Homebrew](https://brew.sh) (macOS). Windows: use WSL, or run the commands
+inside the `Makefile` by hand.
+```bash
+git clone https://github.com/Kaushi0519/VtHacks_2026.git && cd VtHacks_2026
+brew install uv            # Python tooling; installs Python 3.12 itself
+make setup                 # installs everything, creates .env and frontend/.env.local
+```
+Run it in three terminal tabs: `make backend`, `make sim`, `make frontend`. Open
+http://localhost:3000, then use the DEMO buttons at the bottom (start with "Seed history").
+Stop each tab with Ctrl+C. API keys (ANS, Gemini) are shared privately and go in `.env`,
+never in git.
+
 ## MVP scope (build these first, in this order of importance)
 
 1. **Agent network**: simulated agents talking through the gateway
