@@ -107,6 +107,14 @@ version has breaking changes and wants the docs in `node_modules/next/dist/docs/
 The one that actually wins or loses the hackathon. Run `docs/DEMO.md` top to bottom, 3 clean times,
 and file every glitch as a task instead of fixing it live. Record a backup video once it's clean.
 
+## My notes
+
+Everything open — glitches, feature requests, hazards — lives in one file: [NOTES.md](NOTES.md).
+Workflow: one short branch per task off a freshly pulled `main`, merged the same day
+(`git checkout main && git pull --rebase && git checkout -b demo/<task>`). Shared files get a
+heads-up in chat first; under the team rule I only edit `simulator/`, `frontend/components/demo/`,
+`docs/DEMO.md`, my own rows in `docs/TASKS.md`, and this folder.
+
 ## Recommended order
 
 **I1 → I2 → I4 → I3 → I5.** I1 unblocks everything and is pure learning. I2 keeps smoke green (my
