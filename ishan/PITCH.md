@@ -52,68 +52,76 @@ answers without taking a side.
 challenges a number, say what you know and don't improvise. Never claim Sentinel would have prevented
 it — the honest claim is that nothing was watching behavior, which is the gap we built for.
 
-### Speaker 2 — the board (0:40–1:05)
-*(Nothing pressed yet.)*
-> "You're looking at a hospital. On the left, its six AI agents — each with a verified identity from
-> GoDaddy's Agent Name Service. On the right, everything they can reach: payroll, patient records,
-> scheduling, the building systems.
->
-> Lattice sits in between. Every request crosses it, and it answers one question in real time: should
-> *this* agent be doing *this*, right now?"
+> **How to use this:** bullets are *points*, not lines — say them your way. Only the **bold quoted
+> lines** are fixed; those are the ones that land, so deliver them exactly and slow down for them.
+
+### Speaker 2 — the board (0:40–1:05) · nothing pressed yet
+- A hospital running Lattice.
+- **Left:** six AI agents, each with a verified identity from GoDaddy's Agent Name Service.
+- **Right:** everything they can reach — payroll, patient records, scheduling, building systems.
+- Lattice sits in between; every request crosses it.
+- > **"It answers one question in real time: should *this* agent be doing *this*, right now?"**
 
 ### Speaker 3 — the demo (1:05–2:25) · driver presses, speaker narrates
 
-**Press 1 — "Normal + decay"**
-> "A normal Tuesday. Every green packet is a request that was verified, checked against the agent's
-> role, and allowed.
->
-> Now watch AnalyticsAgent. It needs patient records for one report, so it's granted access — for
-> minutes, not forever. That countdown is the access expiring on its own. Most breaches start with a
-> permission nobody remembered to take away."
+**Press 1 — Normal + decay**
+- Agents talk to each other and to company systems freely — as long as it's inside their jurisdiction.
+- Green packet = verified, role-checked, allowed. This is a hospital running itself.
+- AnalyticsAgent gets temporary access for one report; the countdown on the left is it expiring.
+- Try to use it after it lapses → blocked.
+- > **"Most breaches start with a permission nobody remembered to take away."**
 
-**Press 2 — "Fake agent"**
-> "Now something unknown claims to be a payroll sync service. ANS can't resolve it — denied on
-> identity alone. We never even evaluated what it wanted. And it stays on the board as an unverified
-> caller, because *who tried* is worth knowing."
+**Press 2 — Fake agent**
+- Something unknown claims to be a payroll sync service.
+- ANS can't resolve it → denied on identity alone; we never evaluated what it wanted.
+- It stays on the board as an unverified caller — *who tried* is worth knowing.
 
-**Press 3 — "Compromised agent"**
-> "Here's the hard case: the **real** FacilitiesAgent. Verified, here all week, runs the lights and the
-> HVAC. It's just been prompt-injected.
->
-> Watch the score. A burst — 23. Salary data, outside its role — denied, 78. Patient records —
-> **quarantined.** Cut off from the whole mesh, including its own job."
-
-*(Stop. Two seconds of silence on the red node.)*
-
-> "Nothing about its identity changed. It was exactly who it said it was the entire time."
+**Press 3 — Compromised agent**
+- The **real** FacilitiesAgent. Verified, here all week, runs lights and HVAC. Just got prompt-injected.
+- Narrate the score as it moves: burst → **23** · salary data, outside its role → denied, **78** ·
+  patient records → **quarantined**.
+- Cut off from the whole mesh, including its own job, until a human reviews it.
+- *(Stop. Two full seconds on the red node.)*
+- > **"Nothing about its identity changed. It was exactly who it said it was the entire time."**
 
 ### Speaker 4 — the AI detector + the record (2:25–3:20)
 
-**Press 4 — "Subtle compromise (Gemini catches it)"**
-> "Rules catch the obvious. But what about an agent whose every action is *allowed*?
->
-> This one stays inside its permissions the whole way. Gemini reads the *sequence* against what the
-> agent was actually assigned to do, and flags it — critical, ninety-five percent. Two detectors: rules
-> for what's objectively wrong, an LLM for what's only wrong in context. The fallback can never
-> quarantine anything; only real Gemini can."
+**Press 4 — Subtle compromise (Gemini catches it)**
+- Rules catch the obvious. But what about an agent whose every action is *allowed*?
+- This one never leaves its permissions — every request green.
+- Gemini reads the **sequence** against the agent's assigned task → critical, 95%.
+- Two detectors: rules for what's objectively wrong, an LLM for what's only wrong in context.
+- > **"The rule-based fallback can never quarantine anything. Only real Gemini can."**
 
 **Click the Accountability tab**
-> "And all of it is on the record. Not logs — findings. This agent is misconfigured, it's been asking
-> for payroll access all week. This one is over-privileged, it holds permissions it has never used.
-> This caller was never ours. Every decision, replayable, with the reason attached. That's the part a
-> company actually buys."
+- Everything is on the record — **not logs, findings**.
+- Point at three: misconfigured (asking for payroll all week) · over-privileged (permissions never
+  used) · a caller that was never ours.
+- Every decision replayable, with the reason attached.
+- > **"That's the part a company actually buys."**
 
 ### Speaker 1 — how it's built + close (3:20–4:00)
-> "Under the hood: a FastAPI gateway where every decision becomes an immutable event, streamed live to
-> a Next.js dashboard. Identity from GoDaddy's ANS. Gemini for the semantic analysis, with a labeled
-> rule-based fallback — we always tell you which one you're looking at.
+
+**Points (fast, ~15s):**
+- FastAPI gateway; every decision becomes an immutable event in SQL, streamed live to a Next.js
+  dashboard.
+- Identity from GoDaddy's ANS. Gemini for semantic analysis, with a labeled rule-based fallback.
+- Honesty beat: ANS is in mock mode today, and proving an agent *holds* the identity it claims needs
+  mTLS — we haven't built that.
+
+**Then word for word:**
+> "Every organization is about to be running agents like these. The ones who can least afford a
+> mistake are already there — Peraton builds and runs mission systems for national security, where
+> *who are you* has never been enough, and where the standard is verifying every action, every time.
 >
-> And straight with you: ANS is in mock mode today, and proving an agent *holds* the identity it claims
-> needs mTLS, which we haven't built.
+> That standard exists for people and for devices. It doesn't exist yet for AI agents.
 >
 > Twelve hundred agents got out of a sandbox this summer, and nobody noticed until it was somebody
-> else's problem. **ANS tells you who an agent is. Lattice decides whether its behavior still deserves
-> access.**"
+> else's problem.
+>
+> **ANS tells you who an agent is. Lattice decides whether its behavior still deserves access.**"
+
+*(Beat. Then stop talking. Don't add "...and that's our project.")*
 
 ## Demo bar reference
 
