@@ -28,7 +28,7 @@ answering questions and started taking actions, with credentials granted once an
 >
 > That's why we built Lattice. It cuts an agent off for what it's *doing*, not just who it is."
 
-*(96 words, ~40s. Pause before "Every one of those agents" and slow down — it's the line the whole demo pays off, and
+*(~35s spoken. Pause before "Every one of those agents" and slow down — it's the line the whole demo pays off, and
 the line Speaker 1 closes on.)*
 
 **Why not "zero-trust security gateway" out loud:** in security, zero trust reads as *identity*
@@ -52,87 +52,89 @@ answers without taking a side.
 challenges a number, say what you know and don't improvise. Never claim Sentinel would have prevented
 it — the honest claim is that nothing was watching behavior, which is the gap we built for.
 
-### Speaker 2 — what it is (0:40–1:00) · **start the tenant run as you begin speaking**
-> "So we built Sentinel Mesh: a zero-trust security gateway for networks of AI agents. Every action an
-> agent takes goes through it, and it decides — allow, deny, or isolate — in real time.
+### Speaker 2 — the board (0:40–1:05)
+*(Nothing pressed yet.)*
+> "You're looking at a hospital. On the left, its six AI agents — each with a verified identity from
+> GoDaddy's Agent Name Service. On the right, everything they can reach: payroll, patient records,
+> scheduling, the building systems.
 >
-> Identity comes from GoDaddy's Agent Name Service. That tells us *who* an agent is. But here's the
-> whole thesis:
+> Lattice sits in between. Every request crosses it, and it answers one question in real time: should
+> *this* agent be doing *this*, right now?"
+
+### Speaker 3 — the demo (1:05–2:25) · driver presses, speaker narrates
+
+**Press 1 — "Normal + decay"**
+> "A normal Tuesday. Every green packet is a request that was verified, checked against the agent's
+> role, and allowed.
 >
-> **Identity doesn't imply trust. ANS tells us who the agent is. Sentinel decides whether its behavior
-> still deserves access.**
+> Now watch AnalyticsAgent. It needs patient records for one report, so it's granted access — for
+> minutes, not forever. That countdown is the access expiring on its own. Most breaches start with a
+> permission nobody remembered to take away."
+
+**Press 2 — "Fake agent"**
+> "Now something unknown claims to be a payroll sync service. ANS can't resolve it — denied on
+> identity alone. We never even evaluated what it wanted. And it stays on the board as an unverified
+> caller, because *who tried* is worth knowing."
+
+**Press 3 — "Compromised agent"**
+> "Here's the hard case: the **real** FacilitiesAgent. Verified, here all week, runs the lights and the
+> HVAC. It's just been prompt-injected.
 >
-> What you're watching is a hospital: six ANS-verified agents doing their normal jobs. Green means
-> allowed. This is a system behaving."
+> Watch the score. A burst — 23. Salary data, outside its role — denied, 78. Patient records —
+> **quarantined.** Cut off from the whole mesh, including its own job."
 
-### Speaker 3 — the living hospital (1:00–2:35) · narrate what appears, don't read the clock
-Cue off the **screen**, not the stopwatch — the run paces itself.
+*(Stop. Two seconds of silence on the red node.)*
 
-**When the countdown appears on AnalyticsAgent:**
-> "Analytics needs patient records for one report. It gets them — for a few minutes, not forever.
-> Watch that timer. Nobody has to remember to revoke it; the access expires on its own."
+> "Nothing about its identity changed. It was exactly who it said it was the entire time."
 
-**When SchedulingAgent starts flooding the mesh:**
-> "Now something breaks. SchedulingAgent's automation loop runs away — it's hammering the gateway,
-> then drifting into systems it has no business touching. Payroll. Patient records.
-> Risk climbs. Seventy-seven. Then it crosses critical — **quarantined.** The node goes red and it's
-> cut off from the entire mesh, including its own normal work. A buggy insider, isolated before it did
-> damage."
+### Speaker 4 — the AI detector + the record (2:25–3:20)
 
-**When IntakeAgent comes online:**
-> "Here's the one that matters. A new agent just joined — IntakeAgent, onboarded this week to help
-> with scheduling. Valid ANS identity. Verified. It does normal work... and then it reaches for
-> patient records and the credential vault.
-> **Quarantined.**"
-
-*(Stop. Two full seconds of silence on the two red nodes.)*
-
-> "That agent's identity was never the problem. It was exactly who it claimed to be. Its *behavior*
-> was the problem — and that's the thing an identity check can't see."
-
-### Speaker 4 — what the rules can't catch (2:35–3:15)
-*(Click the incident → the "Why" panel.)*
-> "Those two were caught by deterministic rules — forbidden scope, rate spikes, hard thresholds. Fast,
-> explainable, no AI in the decision path.
+**Press 4 — "Subtle compromise (Gemini catches it)"**
+> "Rules catch the obvious. But what about an agent whose every action is *allowed*?
 >
-> But what about an agent whose every single action is *allowed*? *(open the subtle-exfiltration
-> incident)* This one stayed inside its permissions the whole time — and Gemini read the *sequence*,
-> saw it didn't match the agent's actual job, and flagged it. Critical. Ninety-five percent.
->
-> Two detectors: rules for what's objectively wrong, an LLM for what's only wrong in context."
+> This one stays inside its permissions the whole way. Gemini reads the *sequence* against what the
+> agent was actually assigned to do, and flags it — critical, ninety-five percent. Two detectors: rules
+> for what's objectively wrong, an LLM for what's only wrong in context. The fallback can never
+> quarantine anything; only real Gemini can."
 
-### Speaker 1 — close (3:15–4:00) · the person who opened, closes
-*(Accountability tab.)*
-> "And afterwards, the company can finally answer a question it couldn't before: what have our agents
-> actually been doing? Not logs — findings. This one is misconfigured. This one holds permissions it
-> has never used. This caller was never ours.
+**Click the Accountability tab**
+> "And all of it is on the record. Not logs — findings. This agent is misconfigured, it's been asking
+> for payroll access all week. This one is over-privileged, it holds permissions it has never used.
+> This caller was never ours. Every decision, replayable, with the reason attached. That's the part a
+> company actually buys."
+
+### Speaker 1 — how it's built + close (3:20–4:00)
+> "Under the hood: a FastAPI gateway where every decision becomes an immutable event, streamed live to
+> a Next.js dashboard. Identity from GoDaddy's ANS. Gemini for the semantic analysis, with a labeled
+> rule-based fallback — we always tell you which one you're looking at.
 >
-> We'll be straight about what's real: ANS is running in labeled mock mode, Gemini analysis is live,
-> hard policy is deterministic code — the AI explains and can escalate, it never replaces the rules —
-> and proving an agent *holds* the identity it claims needs mTLS, which we haven't built yet.
+> And straight with you: ANS is in mock mode today, and proving an agent *holds* the identity it claims
+> needs mTLS, which we haven't built.
 >
 > Twelve hundred agents got out of a sandbox this summer, and nobody noticed until it was somebody
-> else's problem. **ANS tells you who the agent is. Sentinel decides whether its behavior still
-> deserves access.**"
+> else's problem. **ANS tells you who an agent is. Lattice decides whether its behavior still deserves
+> access.**"
 
-## Running it (4:00 budget)
+## Demo bar reference
 
-| Time | Who | On screen |
+| Key | Button | What it runs |
 |---|---|---|
-| 0:00–0:40 | S1 | dashboard idle, all green |
-| 0:40–1:00 | S2 | **start `tenant` now**; fleet comes online |
-| 1:00–2:35 | S3 | decay countdown → malfunction quarantine → malicious quarantine |
-| 2:35–3:15 | S4 | incident "Why" panel, Gemini reasoning |
-| 3:15–4:00 | S1 | accountability page, close |
+| — | Seed history | a week of history, for the Accountability page (press before you start) |
+| **1** | Normal + decay | `normal_operation` + `permission_decay` |
+| **2** | Fake agent | `fake_agent` |
+| **3** | Compromised agent | `compromised_agent` |
+| **4** | Subtle compromise (Gemini catches it) | `subtle_exfiltration` — needs `GEMINI_MODE=real` |
+| **5** | Living tenant | the whole story as one continuous ~90s run |
+| **6** | Real LLM agent (Gemini catches it) | a genuine model-driven agent, hijacked mid-run |
+| **A** | Ambient | background traffic on/off — **leave it off during the pitch** |
+| **R** | Reset | stops everything and resets (confirm) |
+| **D** | — | hide the bar for a clean screen |
 
-**Start the run:** `cd simulator && uv run python -m sentinel_sim tenant --pace 1.3` (~2 min), or the
-demo-bar button (Kiernan wired `tenant` + `agent` in `cb22302`). Press it as Speaker 2 opens their
-mouth: the arc gives ~18s of steady green first, which covers their intro exactly.
+**Buttons 5 and 6 only appear after `make sim` is restarted** — the simulator doesn't hot-reload, so
+it keeps serving whatever scenarios existed when it started.
 
-**The Gemini beat — decide in rehearsal:**
-- *Safer:* run `subtle_exfiltration` **before judges arrive**, so the incident already exists and
-  Speaker 4 just clicks it. No live latency, no 503 risk.
-- *Live:* start it during Speaker 3's silence. Only if it has been reliable in three rehearsals.
+**Before judges arrive:** press Seed history, then R, then Seed history once more if you ran anything.
+Confirm all agents green and the top bar reads SECURE.
 
 ## Why this sells
 - **The wow is a negative result.** Anyone blocks a fake agent. Blocking a *verified* one is the
