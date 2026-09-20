@@ -9,50 +9,6 @@ Status: 🔴 needs someone else · ✅ done (kept only as a one-liner at the bot
 
 ## 🔴 Waiting on other owners
 
-### G4 — "open" in the accountability Incidents list looks like a button (Person 2 / Kiernan)
-In an agent report, each incident row ends with the word `open`. That's the incident **status**
-(`AgentReportPanel.tsx`, `{i.status}`), not a control, but the title beside it is truncated, so it
-reads like "show more" and clicking does nothing. I clicked it repeatedly before reading the code;
-a judge will too. Suggestion: style status as a badge (● OPEN / RESOLVED) and make the row itself
-open the incident — a long incident title currently can't be read in full anywhere on that page.
-
----|---|---|
-| `cooldownPerMinute` (recovery rate) | 1.0 / min | risk cools toward baseline while the agent behaves (`cooled_score`, `behavior/risk.py`) |
-| `weightForbiddenScope` | +35 | request is outside the agent's role ("outside its domain") |
-| `weightNewSensitiveResource` | +20 | first touch of high/critical data it holds no grant for |
-| `weightRateSpike` | +15 | > 3× its normal request rate in 60s |
-| `weightUnexpectedPeer` | +15 | calls an agent it has never talked to |
-| `weightRepeatedDenials` | +10 | 3rd denial within 5 min |
-| `weightExpiredGrantUse` | +5 | tries a grant that has decayed |
-| `weightHoneypot` | +50 | touches a decoy resource |
-
-A single in-role request with no grant (`NO_GRANT`) adds nothing on its own today; it only counts
-through `REPEATED_DENIALS`. If tenants want that to cost points, it needs a new signal (P3).
-
-**Proposal:** a settings page with a slider per knob plus presets (Strict / Standard / Relaxed),
-hand-picked and labeled as such. A heuristic, not a calibrated model.
-
-**Guardrails — these are what make it survive judges' questions:**
-- **Contract change.** Needs a write endpoint (e.g. `PATCH /api/system/risk-policy`): Pydantic model,
-  `frontend/types/sentinel.ts` and `docs/API.md` in one commit, reviewed by Person 1.
-- **Operator-only and audited.** Gate it like the other operator routes (`OPERATOR_TOKEN`) and append
-  an audit event per change (who, when, old → new). Otherwise lowering weights quietly disables
-  detection.
-- **Bounded.** Clamp each weight (e.g. 0–50) and warn when a setting makes quarantine unreachable for
-  the reference compromise pattern ("with these weights it peaks at 62 and never quarantines").
-- **Past decisions don't change.** Every stored event records the weight of each signal that fired, so
-  history stays explainable. Only new requests use new weights.
-- **Demo safety.** `POST /api/admin/reset` must restore defaults, or `make smoke` and the scripted
-  8 → 23 → 78 → quarantine story drift.
-- Quarantined agents stay frozen regardless of the recovery rate.
-
-**Open question (P3):** recovery is per wall-clock minute; for low-activity agents, per N clean
-requests may fit better. `RATE_SPIKE` already scales with each agent's `expectedRpm`.
-**Optional, very visible:** a "what-if" preview replaying the compromised-agent sequence against the
-draft weights before saving.
-
----
-
 ### G5 — "React Flow" badge in the mesh links off to reactflow.dev (Person 2 / Kiernan)
 Bottom-right of the mesh panel. It's a live link to `reactflow.dev/remove-attribution`, so a judge
 who clicks it leaves our product mid-demo and lands on a third-party site.
