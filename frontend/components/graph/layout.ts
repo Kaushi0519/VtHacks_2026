@@ -8,7 +8,11 @@
 export const COLUMN_X = { ghost: 0, agent: 260, resource: 600 } as const;
 export const HEADER_Y = -48;
 
-const AGENT_ORDER = ["facilities-agent", "scheduling-agent", "payroll-agent", "analytics-agent", "database-agent"];
+// intake-agent sits directly under scheduling-agent, its only peer: it is the third-party assistant
+// onboarded "this week" in the living-tenant demo, and the story reads best when the newcomer is
+// embedded among the real agents rather than parked at the bottom looking like an outsider.
+// scheduling-agent has three peers and only two neighbours, so its payroll edge takes the one arc.
+const AGENT_ORDER = ["facilities-agent", "scheduling-agent", "intake-agent", "payroll-agent", "analytics-agent", "database-agent"];
 const RESOURCE_ORDER = [
   "building-mgmt",
   "scheduling-system",
@@ -19,7 +23,7 @@ const RESOURCE_ORDER = [
   "credential-vault",
 ];
 
-const AGENT_STEP = 100;
+const AGENT_STEP = 92; // tightened from 100 when the sixth agent arrived; height is still the binding dimension
 const RESOURCE_STEP = 68;
 const GHOST_STEP = 96;
 
