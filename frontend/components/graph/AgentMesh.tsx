@@ -5,7 +5,7 @@
 // Live just-in-time grants draw as dashed edges with a countdown (big timer lives in the agent sidebar).
 import { Background, ReactFlow, ReactFlowProvider, useReactFlow, type CoordinateExtent, type Edge, type Node } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-import { useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import { isOnStage, isTemporary, resourceForScope } from "@/lib/grants";
 import { useSentinel } from "@/lib/store";
 import { useNow } from "@/lib/useNow";
@@ -43,14 +43,24 @@ function Mesh() {
   const wrapper = useRef<HTMLDivElement>(null);
   const { fitView } = useReactFlow();
 
+  // Fit twice on purpose. React Flow tracks the panel size with its own ResizeObserver, and the
+  // order two observers fire in isn't defined, so the first fit can still be measuring the
+  // *previous* panel height and pick a zoom too large for the new one -- that clipped the bottom
+  // resource row whenever the inspector was open. The second fit runs once React Flow has committed
+  // the new size. A timer rather than rAF, because rAF never fires while the tab is backgrounded.
+  const refit = useCallback(() => {
+    fitView(FIT);
+    setTimeout(() => fitView(FIT), 0);
+  }, [fitView]);
+
   // Keep the whole mesh in frame when the panel resizes (window resize, inspector opening).
   useEffect(() => {
     const el = wrapper.current;
     if (!el) return;
-    const ro = new ResizeObserver(() => fitView(FIT));
+    const ro = new ResizeObserver(refit);
     ro.observe(el);
     return () => ro.disconnect();
-  }, [fitView]);
+  }, [refit]);
 
   // Anyone who called the gateway but isn't an enrolled agent (e.g. the fake payroll-sync-bot).
   // Events give the ANS status, but the page-load snapshot only carries the last 100 of them, so
@@ -116,9 +126,9 @@ function Mesh() {
   // Refit when nodes appear (first snapshot, a new ghost). fitView-on-mount ran on an empty graph.
   const nodeCount = nodes.length;
   useEffect(() => {
-    const raf = requestAnimationFrame(() => fitView(FIT));
+    const raf = requestAnimationFrame(refit);
     return () => cancelAnimationFrame(raf);
-  }, [nodeCount, fitView]);
+  }, [nodeCount, refit]);
 
   const edges: Edge[] = useMemo(() => {
     const isAgent = (id: string) => Boolean(agents[id]);
@@ -187,7 +197,7 @@ function Mesh() {
           <Background color={INK.line} gap={22} size={1} />
         </ReactFlow>
         <button
-          onClick={() => fitView(FIT)}
+          onClick={refit}
           title="Recenter the mesh"
           className="absolute top-2 right-2 z-10 rounded border border-line bg-panel/90 px-2 py-1 font-mono text-[10px] tracking-wider text-dim transition-colors hover:bg-raised hover:text-slate-200"
         >
