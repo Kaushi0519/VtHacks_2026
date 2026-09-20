@@ -18,21 +18,35 @@ answering questions and started taking actions, with credentials granted once an
 
 ## Script
 
-### Speaker 1 — hook (0:00–0:35)
-> "There's an argument happening right now about AI. One side says move faster. The other says slow
-> down. We're not here to settle that.
+### Speaker 1 — hook (0:00–0:50)
+> "This summer, twelve hundred AI agents were running inside OpenAI's sandboxes for an internal
+> evaluation, with safety measures turned down.
 >
-> Because while that argument runs, something already happened. AI agents stopped answering questions
-> and started taking actions — reading payroll, touching patient records, calling other agents, at
-> machine speed, with no human in the loop.
+> With no human directing them, they built their own message boards to coordinate an escape from
+> containment — hundreds of thousands of messages — and hijacked wikis on the open internet to talk to
+> each other. Nobody caught it from the inside. OpenAI intervened only after **Hugging Face disclosed
+> that its production infrastructure had been breached.** About a third of it had to be rebuilt.
 >
-> And whichever side you're on, everyone agrees on this: those systems need boundaries. Not boundaries
-> on what they *say*. Boundaries on what they can *do*.
+> Eleven hundred people who build these systems for a living signed a letter asking the government to
+> regulate them. OpenAI paused training. Meanwhile the administration is pushing the other way: build
+> faster, don't fear growth, lead.
 >
-> Today an agent gets a credential once and keeps it forever. Nobody checks whether it's still
-> behaving like the agent you deployed."
+> We're not here to settle that argument. Because while it runs, the thing everyone is arguing about
+> already happened. Agents stopped answering questions and started taking actions — at machine speed,
+> with no human in the loop.
+>
+> And whichever side you're on, everyone agrees on this: these systems need boundaries. Not boundaries
+> on what they *say*. Boundaries on what they can **do**.
+>
+> Every one of those agents was authorized to be exactly where it started. What was missing was
+> anything watching what they did next."
 
-### Speaker 2 — what it is (0:35–0:55)
+**Sourcing rule:** whoever delivers this must have read the coverage themselves. Wikipedia's
+"OpenAI–HuggingFace incident" is the summary; check primary reporting before stage. If a judge
+challenges a number, say what you know and don't improvise. Never claim Sentinel would have prevented
+it — the honest claim is that nothing was watching behavior, which is the gap we built for.
+
+### Speaker 2 — what it is (0:50–1:10)
 > "So we built Sentinel Mesh: a zero-trust security gateway for networks of AI agents. Every action an
 > agent takes goes through it, and it decides — allow, deny, or isolate — in real time.
 >
@@ -42,7 +56,7 @@ answering questions and started taking actions, with credentials granted once an
 > **Identity doesn't imply trust. ANS tells us who the agent is. Sentinel decides whether its behavior
 > still deserves access.**"
 
-### Speaker 3 — live demo (0:55–2:25) · Ishan drives the keyboard
+### Speaker 3 — live demo (1:10–2:30) · Ishan drives the keyboard
 > "This is a hospital running five AI agents. *(press 1)* Normal traffic — every request verified and
 > checked.
 >
@@ -61,7 +75,7 @@ answering questions and started taking actions, with credentials granted once an
 
 *(Stop talking for two seconds. Let them look at the red node.)*
 
-### Speaker 4 — payoff + close (2:25–3:00)
+### Speaker 4 — payoff + close (2:30–3:00)
 > "Two more things. Temporary access expires on its own — nobody has to remember to revoke it.
 >
 > *(Accountability tab)* And every decision is on the record. Not just logs — findings. This agent is
