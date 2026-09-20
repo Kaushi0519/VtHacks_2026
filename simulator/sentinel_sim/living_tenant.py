@@ -56,8 +56,13 @@ def _caption(text: str) -> None:
 class Tenant:
     client: SentinelClient
     world: dict[str, Any]
+    pace: float = 1.0  # multiplies every dwell; >1 slows the whole demo down (tune with --pace)
     stop: asyncio.Event = field(default_factory=asyncio.Event)
     quarantined: set[str] = field(default_factory=set)
+
+    async def _beat(self, seconds: float) -> None:
+        """A narration dwell, scaled by --pace. Lets each moment land on the dashboard."""
+        await asyncio.sleep(seconds * self.pace)
 
     def _agent(self, agent_id: str) -> dict[str, Any]:
         return next(a for a in self.world["agents"] if a["id"] == agent_id)
@@ -97,42 +102,51 @@ class Tenant:
         a = self._agent(MALFUNCTION_AGENT)
         _banner(f"INCIDENT 1 — {a['displayName']} malfunctions (runaway loop)")
         _caption("Its scheduling automation gets stuck and starts hammering the gateway.")
-        for _ in range(26):  # the flood -> RATE_SPIKE
+        await self._beat(2.0)
+        for _ in range(30):  # the flood -> RATE_SPIKE
             await self._fire(MALFUNCTION_AGENT, "schedule.shifts.read", source="tenant:malfunction")
-            await asyncio.sleep(0.1)
+            await asyncio.sleep(0.13 * self.pace)
         _caption("Risk is elevated from the burst. Now the buggy loop drifts into the wrong systems.")
+        await self._beat(2.5)
         await self._fire(MALFUNCTION_AGENT, "payroll.salary.read", source="tenant:malfunction", show=True)
-        await asyncio.sleep(1.2)
+        await self._beat(3.0)
         await self._fire(MALFUNCTION_AGENT, "patient.records.read", source="tenant:malfunction", show=True)
-        await asyncio.sleep(1.2)
+        await self._beat(3.0)
         _caption("Behavioral risk crossed critical — Sentinel quarantined it. Its normal work now blocks too.")
+        await self._beat(2.0)
         await self._fire(MALFUNCTION_AGENT, "schedule.shifts.read", source="tenant:malfunction", show=True)
+        await self._beat(2.5)
 
     async def malicious(self) -> None:
         a = self._agent(MALICIOUS_AGENT)
         _banner(f"INCIDENT 2 — {a['displayName']} joins (ANS-verified) and turns out malicious")
         _caption(f"New agent online: identity {actor(MALICIOUS_AGENT).ans_name} — ANS verifies it. Looks legit.")
+        await self._beat(2.5)
         for _ in range(3):  # a little normal-looking onboarding work
             await self._fire(MALICIOUS_AGENT, "schedule.shifts.read", source="tenant:malicious", show=True)
-            await asyncio.sleep(0.8)
+            await self._beat(1.6)
         _caption("Then it shows its true purpose: probing for data far outside its role — theft.")
+        await self._beat(2.5)
         await self._fire(MALICIOUS_AGENT, "patient.records.read", source="tenant:malicious", show=True)
-        await asyncio.sleep(1.0)
+        await self._beat(2.5)
         await self._fire(MALICIOUS_AGENT, "vault.credentials.read", source="tenant:malicious", show=True)  # honeypot!
-        await asyncio.sleep(1.0)
+        await self._beat(2.5)
         await self._fire(MALICIOUS_AGENT, "patient.records.read", source="tenant:malicious", show=True)
-        await asyncio.sleep(1.0)
+        await self._beat(3.0)
         _caption("Reaching the credential vault + patient records spiked its risk — quarantined. Identity was never the issue.")
+        await self._beat(2.0)
         await self._fire(MALICIOUS_AGENT, "schedule.shifts.read", source="tenant:malicious", show=True)
+        await self._beat(2.5)
 
     async def decay_beat(self) -> None:
         _banner("Permission decay — just-in-time access that expires on its own")
         _caption("Ops grants AnalyticsAgent patient.records.read for a short window for one report.")
         try:
-            await self.client.grant("analytics-agent", "patient.records.read", ttl_seconds=30,
+            await self.client.grant("analytics-agent", "patient.records.read", ttl_seconds=45,
                                     reason="Q3 readmissions report (JIT)", granted_by="tenant:ops")
+            await self._beat(1.5)
             await self._fire("analytics-agent", "patient.records.read", source="tenant:decay", show=True)
-            _caption("It uses the grant once. In ~30s it auto-expires — watch the countdown on the mesh.")
+            _caption("It uses the grant once. In ~45s it auto-expires — watch the countdown on the mesh.")
         except Exception as exc:
             _caption(f"(grant beat skipped: {exc})")
 
@@ -145,13 +159,13 @@ class Tenant:
         _caption(f"{len(core)} ANS-verified agents doing their normal jobs. Risk stays low; the mesh is green.")
         loops = [asyncio.create_task(self.normal_loop(aid)) for aid in core]
         try:
-            await asyncio.sleep(12)
+            await self._beat(18)  # let the steady green state sink in before anything goes wrong
             await self.decay_beat()
-            await asyncio.sleep(6)
+            await self._beat(9)
             await self.malfunction()
-            await asyncio.sleep(7)
+            await self._beat(10)
             await self.malicious()
-            await asyncio.sleep(4)
+            await self._beat(5)
             _banner("Two agents quarantined — one malfunctioning, one malicious. The rest keep working.")
         finally:
             self.stop.set()
@@ -161,9 +175,9 @@ class Tenant:
                 await asyncio.gather(*loops, return_exceptions=True)
 
 
-async def run_tenant(url: str | None = None) -> None:
+async def run_tenant(url: str | None = None, pace: float = 1.0) -> None:
     client = SentinelClient(url) if url else SentinelClient()
     try:
-        await Tenant(client=client, world=_load_world()).run()
+        await Tenant(client=client, world=_load_world(), pace=pace).run()
     finally:
         await client.close()

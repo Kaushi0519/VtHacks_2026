@@ -60,6 +60,7 @@ def main() -> None:
     ag.add_argument("--scripted", action="store_true", help="force the deterministic brain (no LLM key)")
     tn = sub.add_parser("tenant", help="the full healthcare demo as one continuous simulation")
     tn.add_argument("--url", default=DEFAULT_URL)
+    tn.add_argument("--pace", type=float, default=1.0, help="dwell multiplier; >1 slows the demo down")
     smoke = sub.add_parser("smoke")
     smoke.add_argument("--url", default=DEFAULT_URL)
     serve = sub.add_parser("serve")
@@ -83,7 +84,7 @@ def main() -> None:
     elif args.cmd == "tenant":
         from sentinel_sim.living_tenant import run_tenant
 
-        asyncio.run(run_tenant(args.url))
+        asyncio.run(run_tenant(args.url, pace=args.pace))
     elif args.cmd == "smoke":
         async def all_() -> bool:
             ok = True
