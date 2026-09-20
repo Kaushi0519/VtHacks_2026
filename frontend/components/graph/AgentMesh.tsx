@@ -160,16 +160,23 @@ function Mesh() {
 
   // Bound the drag so the mesh can never be pulled off screen. Derived from the nodes' own box, so
   // it grows with the tenant; the margin is deliberately loose enough to inspect one corner.
+  // Keyed on the positions rather than on `nodes`: `nodes` is rebuilt on every packet pulse, so
+  // memoizing on it handed React Flow a brand-new translateExtent array many times a second under
+  // load, re-clamping the viewport while a fit was still settling. The positions themselves are a
+  // fixed layout, so this key is stable and the extent is now built once per layout change.
+  const extentKey = nodes.map((n) => `${n.position.x},${n.position.y}`).join("|");
   const extent = useMemo<CoordinateExtent | undefined>(() => {
-    if (nodes.length === 0) return undefined;
-    const xs = nodes.map((n) => n.position.x);
-    const ys = nodes.map((n) => n.position.y);
+    if (!extentKey) return undefined;
+    const points = extentKey.split("|").map((p) => p.split(",").map(Number));
+    const xs = points.map((p) => p[0]);
+    const ys = points.map((p) => p[1]);
     const M = 320; // roughly one node column of slack on every side
-    return [
-      [Math.min(...xs) - M, Math.min(...ys) + HEADER_Y - M],
-      [Math.max(...xs) + NODE_W + M, Math.max(...ys) + NODE_H + M],
-    ];
-  }, [nodes]);
+    const min: [number, number] = [Math.min(...xs) - M, Math.min(...ys) + HEADER_Y - M];
+    const max: [number, number] = [Math.max(...xs) + NODE_W + M, Math.max(...ys) + NODE_H + M];
+    // An inverted box leaves the clamp no valid area to land in, which strands the viewport.
+    if (min[0] >= max[0] || min[1] >= max[1]) return undefined;
+    return [min, max];
+  }, [extentKey]);
 
   return (
     <div className="flex h-full min-h-0 flex-col">
