@@ -15,7 +15,9 @@ export function DecayHud() {
   if (shown.length === 0) return null;
 
   return (
-    <div className="space-y-2 border-t border-line px-2 pt-2 pb-2">
+    // Capped: every live grant adds a card, and three of them were enough to push agents out of
+    // the sidebar entirely. Beyond ~2 cards this scrolls instead of eating the agent list.
+    <div className="max-h-[40%] shrink-0 space-y-2 overflow-y-auto border-t border-line px-2 pt-2 pb-2">
       {shown.map((g) => {
         const active = g.status === "active";
         const frac = remainingFraction(g, now);
