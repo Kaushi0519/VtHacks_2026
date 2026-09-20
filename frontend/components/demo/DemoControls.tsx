@@ -12,11 +12,14 @@ import type { RunState, ScenarioInfo } from "@/types/sentinel";
 
 const POLL_MS = 1000;
 
-// DEMO.md script steps. Step 1 starts decay early so its countdown runs during steps 2–3.
+// DEMO.md script steps, in presentation order. Step 1 resets, so the demo always opens clean.
+// Step 2 starts decay alongside normal traffic, so its countdown is already running during 3 and 4.
+// Anything the simulator offers that isn't listed here still gets a button after these.
 const STEPS = [
-  { key: "1", label: "Normal + decay", runs: ["normal_operation", "permission_decay"] },
-  { key: "2", label: "Fake agent", runs: ["fake_agent"] },
+  { key: "1", label: "Agents online", runs: ["agents_online"] },
+  { key: "2", label: "Normal + decay", runs: ["normal_operation", "permission_decay"] },
   { key: "3", label: "Compromised agent", runs: ["compromised_agent"] },
+  { key: "4", label: "Malicious new agent", runs: ["malicious_joiner"] },
 ];
 const AMBIENT = "ambient";
 const BACKFILL = "history_backfill";

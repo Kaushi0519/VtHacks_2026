@@ -19,7 +19,7 @@ RESET = "\033[0m"
 
 # The smoke test: the whole demo in order, with fast decay so it finishes in ~30s.
 SMOKE = [("history_backfill", {}), ("normal_operation", {}), ("permission_decay", {"ttl_seconds": 4}),
-         ("fake_agent", {}), ("compromised_agent", {})]
+         ("fake_agent", {}), ("compromised_agent", {}), ("malicious_joiner", {})]
 
 
 def _print(r: StepResult) -> None:
