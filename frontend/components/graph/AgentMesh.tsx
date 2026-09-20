@@ -78,6 +78,29 @@ function Mesh() {
     return () => ro.disconnect();
   }, [refit]);
 
+  // Last-resort guard. Too many things can resize this panel out from under the mesh -- a grant
+  // countdown card appearing in the sidebar, the demo bar growing a caption row, the inspector, a
+  // layout shift while the tab was frozen -- and missing any one of them strands the mesh off
+  // screen with no way back. Rather than enumerate the triggers, check the invariant: if not one
+  // node is within the panel, re-frame. That state never occurs in normal use (the pan is bounded
+  // and always leaves something visible), so this cannot fight a deliberate pan or zoom.
+  useEffect(() => {
+    const id = window.setInterval(() => {
+      const el = wrapper.current;
+      if (!el) return;
+      const pane = el.getBoundingClientRect();
+      if (pane.width < 1 || pane.height < 1) return;
+      const rendered = el.querySelectorAll(".react-flow__node");
+      if (rendered.length === 0) return;
+      for (const node of rendered) {
+        const r = node.getBoundingClientRect();
+        if (r.right > pane.left && r.left < pane.right && r.bottom > pane.top && r.top < pane.bottom) return;
+      }
+      refit();
+    }, 1000);
+    return () => window.clearInterval(id);
+  }, [refit]);
+
   // ...and when the tab comes back. A backgrounded tab has its ResizeObserver and rAF frozen, so a
   // panel resize that happens while you are away (a grant countdown appearing, the inspector) never
   // gets re-framed; on return the size has not changed *since* returning, so nothing fires and the
