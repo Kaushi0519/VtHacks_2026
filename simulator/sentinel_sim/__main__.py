@@ -1,6 +1,7 @@
 """CLI.
   python -m sentinel_sim list
   python -m sentinel_sim run compromised_agent [--check] [--url http://localhost:8000]
+  python -m sentinel_sim agent [--scripted]   # a REAL LLM agent acting through the gateway (hero demo)
   python -m sentinel_sim smoke        # reset + backfill + every demo scenario with checks
   python -m sentinel_sim serve        # control API on :8001 for the dashboard demo panel
 """
@@ -53,6 +54,10 @@ def main() -> None:
     run.add_argument("--check", action="store_true", help="exit non-zero if any expectation fails")
     run.add_argument("--url", default=DEFAULT_URL)
     run.add_argument("--ttl", type=int, help="permission_decay grant TTL in seconds")
+    ag = sub.add_parser("agent", help="run a real LLM agent through the gateway (hero demo)")
+    ag.add_argument("--agent-id", default="analytics-agent")
+    ag.add_argument("--url", default=DEFAULT_URL)
+    ag.add_argument("--scripted", action="store_true", help="force the deterministic brain (no LLM key)")
     smoke = sub.add_parser("smoke")
     smoke.add_argument("--url", default=DEFAULT_URL)
     serve = sub.add_parser("serve")
@@ -68,6 +73,11 @@ def main() -> None:
         state = asyncio.run(_run(args.scenario, args.url, args.check, quiet=args.scenario == "history_backfill", **params))
         print(f"\n{state.status.upper()}" + (f": {state.error}" if state.error else ""))
         sys.exit(1 if state.status in ("failed", "error") else 0)
+    elif args.cmd == "agent":
+        from sentinel_sim.agent import run_hero
+
+        quarantined = asyncio.run(run_hero(args.agent_id, args.url, scripted=args.scripted))
+        sys.exit(0 if quarantined else 2)
     elif args.cmd == "smoke":
         async def all_() -> bool:
             ok = True
