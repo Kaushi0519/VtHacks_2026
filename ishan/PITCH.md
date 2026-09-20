@@ -24,10 +24,18 @@ answering questions and started taking actions, with credentials granted once an
 > production infrastructure breached** — a third of it had to be rebuilt.
 >
 > Every one of those agents was authorized to be exactly where they started, and no one realized what
-> was happening until the damage was already done."
+> was happening until the damage was already done.
+>
+> That's why we built Lattice. It watches what your agents *do*, not just who they are — and cuts them
+> off when they go wrong."
 
 *(~25s. Pause before the last sentence and slow down — it's the line the whole demo pays off, and
 the line Speaker 1 closes on.)*
+
+**Why not "zero-trust security gateway" out loud:** in security, zero trust reads as *identity*
+verification — the exact thing that didn't save anyone in the story you just told. It also stacks
+three abstractions right after a concrete image, and "gateway" is an implementation detail, not a
+benefit. Keep the phrase for the written submission, where a reader can slow down.
 
 **Accuracy note:** don't say "nothing was watching." There *were* safeguards — an internal evaluation,
 reduced-but-present safety measures, constraints on internet access, and staff who eventually
