@@ -78,6 +78,19 @@ function Mesh() {
     return () => ro.disconnect();
   }, [refit]);
 
+  // ...and when the tab comes back. A backgrounded tab has its ResizeObserver and rAF frozen, so a
+  // panel resize that happens while you are away (a grant countdown appearing, the inspector) never
+  // gets re-framed; on return the size has not changed *since* returning, so nothing fires and the
+  // mesh stays parked off screen. This is the trigger that was missing.
+  useEffect(() => {
+    document.addEventListener("visibilitychange", refit);
+    window.addEventListener("pageshow", refit);
+    return () => {
+      document.removeEventListener("visibilitychange", refit);
+      window.removeEventListener("pageshow", refit);
+    };
+  }, [refit]);
+
   // Anyone who called the gateway but isn't an enrolled agent (e.g. the fake payroll-sync-bot).
   // Events give the ANS status, but the page-load snapshot only carries the last 100 of them, so
   // recent incidents about unknown actors keep the ghost on screen after its events age out.
