@@ -17,6 +17,11 @@ import { usePulses, type Pulse } from "./usePulses";
 // maxZoom keeps the mesh from ballooning on big screens next to the fixed-size side panels; 1.05
 // was low enough that the mesh stopped growing well before it filled the panel.
 const FIT = { padding: 0.06, maxZoom: 1.3 };
+const FIT_PAD = 0.94; // leave a little air around the mesh
+const MIN_ZOOM = 0.15; // low enough that a very narrow panel still frames the whole mesh
+const MAX_ZOOM = 1.3;
+const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v));
+type Bounds = { minX: number; minY: number; w: number; h: number };
 // Unknown callers stay in the "unverified callers" column this long after their last incident.
 const GHOST_WINDOW_MS = 15 * 60_000;
 // Node footprints, for the pan bounds (see `extent`). Widest node is the 210px resource card.
@@ -41,17 +46,28 @@ function Mesh() {
     .map((g) => g.id)
     .join(",");
   const wrapper = useRef<HTMLDivElement>(null);
-  const { fitView } = useReactFlow();
+  const { setViewport } = useReactFlow();
+  // The mesh's own bounding box in flow units, published by the layout memo below.
+  const boundsRef = useRef<Bounds | null>(null);
 
-  // Fit twice on purpose. React Flow tracks the panel size with its own ResizeObserver, and the
-  // order two observers fire in isn't defined, so the first fit can still be measuring the
-  // *previous* panel height and pick a zoom too large for the new one -- that clipped the bottom
-  // resource row whenever the inspector was open. The second fit runs once React Flow has committed
-  // the new size. A timer rather than rAF, because rAF never fires while the tab is backgrounded.
+  // Frame the mesh from the panel's *measured* size rather than via fitView. fitView takes the
+  // panel size from React Flow's internal store, and that store was going stale on resize: the zoom
+  // stayed at whatever the first fit picked while only the pan got re-clamped, which slid every node
+  // out of the panel with nothing able to bring them back. RECENTER calls the same fitView, which is
+  // exactly why pressing it looked like it did nothing. Measured live, this can't drift.
   const refit = useCallback(() => {
-    fitView(FIT);
-    setTimeout(() => fitView(FIT), 0);
-  }, [fitView]);
+    const el = wrapper.current;
+    const b = boundsRef.current;
+    if (!el || !b) return;
+    const { width, height } = el.getBoundingClientRect();
+    if (width < 1 || height < 1) return; // mid-layout; the ResizeObserver will call again
+    const zoom = clamp(Math.min(width / b.w, height / b.h) * FIT_PAD, MIN_ZOOM, MAX_ZOOM);
+    setViewport({
+      x: (width - b.w * zoom) / 2 - b.minX * zoom,
+      y: (height - b.h * zoom) / 2 - b.minY * zoom,
+      zoom,
+    });
+  }, [setViewport]);
 
   // Keep the whole mesh in frame when the panel resizes (window resize, inspector opening).
   useEffect(() => {
@@ -123,13 +139,6 @@ function Mesh() {
     ];
   }, [graph, agents, resources, ghosts, pulses, selectedAgentId]);
 
-  // Refit when nodes appear (first snapshot, a new ghost). fitView-on-mount ran on an empty graph.
-  const nodeCount = nodes.length;
-  useEffect(() => {
-    const raf = requestAnimationFrame(refit);
-    return () => cancelAnimationFrame(raf);
-  }, [nodeCount, refit]);
-
   const edges: Edge[] = useMemo(() => {
     const isAgent = (id: string) => Boolean(agents[id]);
     const quarantined = (id: string) => agents[id]?.status === "quarantined";
@@ -165,18 +174,29 @@ function Mesh() {
   // load, re-clamping the viewport while a fit was still settling. The positions themselves are a
   // fixed layout, so this key is stable and the extent is now built once per layout change.
   const extentKey = nodes.map((n) => `${n.position.x},${n.position.y}`).join("|");
-  const extent = useMemo<CoordinateExtent | undefined>(() => {
-    if (!extentKey) return undefined;
+  const layout = useMemo<{ extent: CoordinateExtent; bounds: Bounds } | null>(() => {
+    if (!extentKey) return null;
     const points = extentKey.split("|").map((p) => p.split(",").map(Number));
     const xs = points.map((p) => p[0]);
     const ys = points.map((p) => p[1]);
+    const minX = Math.min(...xs);
+    const minY = Math.min(...ys) + HEADER_Y; // the zone labels sit a row above the first node
+    const bounds: Bounds = { minX, minY, w: Math.max(...xs) + NODE_W - minX, h: Math.max(...ys) + NODE_H - minY };
+    if (bounds.w <= 0 || bounds.h <= 0) return null;
     const M = 320; // roughly one node column of slack on every side
-    const min: [number, number] = [Math.min(...xs) - M, Math.min(...ys) + HEADER_Y - M];
-    const max: [number, number] = [Math.max(...xs) + NODE_W + M, Math.max(...ys) + NODE_H + M];
-    // An inverted box leaves the clamp no valid area to land in, which strands the viewport.
-    if (min[0] >= max[0] || min[1] >= max[1]) return undefined;
-    return [min, max];
+    const extent: CoordinateExtent = [
+      [minX - M, minY - M],
+      [minX + bounds.w + M, minY + bounds.h + M],
+    ];
+    return { extent, bounds };
   }, [extentKey]);
+  const extent = layout?.extent;
+
+  // Re-frame whenever the layout itself changes (first snapshot, a new ghost node).
+  useEffect(() => {
+    boundsRef.current = layout?.bounds ?? null;
+    refit();
+  }, [layout, refit]);
 
   return (
     <div className="flex h-full min-h-0 flex-col">
@@ -193,6 +213,10 @@ function Mesh() {
           edgeTypes={edgeTypes}
           fitView
           fitViewOptions={FIT}
+          // setViewport is clamped to this range, and React Flow's default floor of 0.5 is too high
+          // to frame the mesh in a narrow panel.
+          minZoom={MIN_ZOOM}
+          maxZoom={MAX_ZOOM}
           colorMode="dark"
           nodesDraggable={false}
           nodesConnectable={false}
