@@ -24,4 +24,7 @@ make test && make smoke    # checks
 Docs: [CLAUDE.md](CLAUDE.md) (start here) · [Architecture](docs/ARCHITECTURE.md) · [API](docs/API.md) ·
 [Demo script](docs/DEMO.md) · [Tasks](docs/TASKS.md)
 
-Sponsors: GoDaddy ANS (identity), Google Gemini (behavioral analysis, advisory only).
+Sponsors: GoDaddy ANS (identity), Google Gemini (semantic behavioral analysis; a real CRITICAL
+finding above the confidence threshold can trigger quarantine, the rule-based fallback never does).
+
+Built with [React Flow](https://reactflow.dev) (MIT) for the agent mesh.
