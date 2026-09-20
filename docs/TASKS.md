@@ -59,6 +59,19 @@ This is the critical path (surprises hide here). It's all local now — no GoDad
 
 Until S1/S2 are done, run everything in `ANS_MODE=mock` — the full demo works on mock.
 
+## Living-tenant demo follow-ups (from the `sentinel_sim tenant` work, now on main)
+
+The finalized demo is the continuous living-tenant arc: `cd simulator && uv run python -m sentinel_sim
+tenant --pace 1.3` (~90s). Two deterministic quarantines (SchedulingAgent malfunction, IntakeAgent
+malicious). These are polish, not blockers.
+
+| Task | Owner | Notes |
+|---|---|---|
+| Wire `tenant` + `agent` into the demo-bar / `serve` control API | Ishan | CLI-only today; add buttons + captions from a RunState, like the other scenarios |
+| Backfill story for `intake-agent` (the 6th agent) | Ishan | no 7-day history → reads "inactive" on the accountability page until it acts; give it a hypothesis |
+| Place the 6th mesh node deliberately | Kiernan (P2) | `frontend/components/graph/layout.ts` only positions the original 5; `intake-agent` auto-appends at a default spot |
+| Correct the stale "api.godaddy.com was wrong" note | P3/backend | `reference.py` + `config.py` comments; GoDaddy production ANS is real (via `ans-cli`), just deprioritized for the demo |
+
 ## P1: high value
 
 | Task | Owner | Notes |
