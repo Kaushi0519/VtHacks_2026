@@ -1,0 +1,10 @@
+# keep the image small and the build fast — never ship local venvs, caches, or the dev DB
+**/.venv
+**/__pycache__
+**/*.pyc
+**/.pytest_cache
+**/.ruff_cache
+frontend/node_modules
+frontend/.next
+**/*.db
+.git
