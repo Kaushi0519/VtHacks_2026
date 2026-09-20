@@ -9,43 +9,6 @@ Status: 🔴 needs someone else · ✅ done (kept only as a one-liner at the bot
 
 ## 🔴 Waiting on other owners
 
-### G5 — "React Flow" badge in the mesh links off to reactflow.dev (Person 2 / Kiernan)
-Bottom-right of the mesh panel. It's a live link to `reactflow.dev/remove-attribution`, so a judge
-who clicks it leaves our product mid-demo and lands on a third-party site.
-
-Removing it is one prop on `<ReactFlow>` in `components/graph/AgentMesh.tsx`:
-```tsx
-proOptions={{ hideAttribution: true }}
-```
-`@xyflow/react` is MIT-licensed, so removing the badge is permitted; React Flow asks that projects
-which hide it consider a Pro subscription to support them. Team's call — but for a judged demo I'd
-hide it, and we can credit React Flow in the submission write-up and README instead.
-
-### G6 — the mesh panel sometimes goes blank (Person 2 / Kiernan)
-**Repro:** click several demo buttons in quick succession and let them run. The mesh panel empties
-out, keeping only the background dots and the badge. The agent list, live feed and top bar keep
-working, so the app itself is fine. It doesn't come back on its own.
-
-**What that narrows it to:** the three zone headers (UNVERIFIED CALLERS / ENROLLED AGENTS /
-RESOURCES) are added to the node list unconditionally, so the node list can never be empty. Their
-disappearing means the **viewport** has moved off the nodes, not that the data is gone.
-
-**Two suspects in `AgentMesh.tsx`:**
-1. `translateExtent` (the R3 pan bounds) is derived from `nodes`, and `nodes` is recomputed on every
-   pulse. So the drag bounds are re-created many times a second during heavy traffic, while
-   `fitView` runs from a ResizeObserver *and* from the node-count effect. A clamp landing between
-   those two fits could park the viewport outside the bounds with nothing to pull it back.
-2. The extent's vertical bounds look asymmetric: the minimum adds `HEADER_Y` (`Math.min(...ys) +
-   HEADER_Y - M`) while the maximum doesn't (`Math.max(...ys) + NODE_H + M`). Worth a second look —
-   if the two ever cross, the clamp has no valid area.
-
-**Suggested fixes:** memoize the extent from the stable nodes only (graph + ghosts, not pulses);
-guard against an inverted extent; and consider refitting on a trailing debounce rather than on every
-node-count change.
-
-**Demo workaround until it's fixed:** press **RECENTER** (top-right of the mesh). If that restores
-it, suspect 1 is confirmed. Also start scenarios **one at a time** — see the next note.
-
 ### G7 — overlapping scenarios break the scripted risk numbers (mine, worth saying out loud)
 In the screenshot from the blank-mesh repro, FacilitiesAgent went `40 → 75` then `75 → 100`, but
 `DEMO.md` step 3 promises `8 → 23 → 78 → 100`. Nothing is wrong: ambient traffic and a second
@@ -76,6 +39,15 @@ that event's risk before→after). Intentional, and it's the whole point: an age
 ---
 
 ## ✅ Closed
+- **G5 React Flow badge** — hidden by Kiernan (`a54190d`), so nothing links a judge off-product
+  mid-demo. Credit React Flow in the README / submission write-up instead.
+- **G6 mesh panel goes blank** — fixed by Kiernan (`ee467be` + 3 follow-ups). Root cause was not the
+  pan bounds I guessed at: React Flow keeps a node `visibility: hidden` until it has measured it, and
+  Chrome freezes the ResizeObserver that measures while the tab is in the background, so the
+  measurement never landed and every node stayed hidden. That also explains why RECENTER did nothing
+  (no measured nodes -> empty bounds -> fitView bails). Now force-re-measures stuck nodes, re-frames
+  on tab return, and re-frames once a second if no node intersects the panel. Verified: switch away
+  mid-scenario, come back, mesh is still there.
 - **Simulator + `OPERATOR_TOKEN`** (`c3ef115`, mine) — the simulator now sends `X-Operator-Token` on
   operator routes when `OPERATOR_TOKEN` is set; agent traffic never sends it. Verified: 401 without,
   PASSED with.
