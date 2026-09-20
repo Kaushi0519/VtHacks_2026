@@ -26,8 +26,7 @@ answering questions and started taking actions, with credentials granted once an
 > Every one of those agents was authorized to be exactly where they started, and no one realized what
 > was happening until the damage was already done.
 >
-> That's why we built Lattice. It watches what your agents *do*, not just who they are — and cuts them
-> off when they go wrong."
+> That's why we built Lattice. It cuts an agent off for what it's *doing*, not just who it is."
 
 *(96 words, ~40s. Pause before "Every one of those agents" and slow down — it's the line the whole demo pays off, and
 the line Speaker 1 closes on.)*
