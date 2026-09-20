@@ -55,43 +55,40 @@ it — the honest claim is that nothing was watching behavior, which is the gap 
 > **How to use this:** bullets are *points*, not lines — say them your way. Only the **bold quoted
 > lines** are fixed; those are the ones that land, so deliver them exactly and slow down for them.
 
-### Speaker 2 — the board (0:40–1:05) · nothing pressed yet
-- A hospital running Lattice.
-- **Left:** six AI agents, each with a verified identity from GoDaddy's Agent Name Service.
-- **Right:** everything they can reach — payroll, patient records, scheduling, building systems.
+### Speaker 2 — the board + the fleet (0:40–1:05)
+
+**Press 1 — Agents online** *(~15s: resets, then each agent checks in and fills the mesh)*
+- A hospital running Lattice. Name the agents as they appear: facilities, payroll, scheduling,
+  analytics, database.
+- **Left:** each one has a verified identity from GoDaddy's Agent Name Service.
+  **Right:** everything they can reach — payroll, patient records, scheduling, building systems.
 - Lattice sits in between; every request crosses it.
 - > **"It answers one question in real time: should *this* agent be doing *this*, right now?"**
 
-### Speaker 3 — the demo (1:05–2:25) · driver presses, speaker narrates
+### Speaker 3 — normal, then the insider (1:05–2:25)
 
-**Press 1 — Normal + decay**
-- Agents talk to each other and to company systems freely — as long as it's inside their jurisdiction.
+**Press 2 — Normal + decay**
 - Green packet = verified, role-checked, allowed. This is a hospital running itself.
-- AnalyticsAgent gets temporary access for one report; the countdown on the left is it expiring.
-- Try to use it after it lapses → blocked.
+- AnalyticsAgent gets temporary access for one report; the countdown is it expiring on its own.
+- Use it after it lapses → blocked.
 - > **"Most breaches start with a permission nobody remembered to take away."**
-
-**Press 2 — Fake agent**
-- Something unknown claims to be a payroll sync service.
-- ANS can't resolve it → denied on identity alone; we never evaluated what it wanted.
-- It stays on the board as an unverified caller — *who tried* is worth knowing.
 
 **Press 3 — Compromised agent**
 - The **real** FacilitiesAgent. Verified, here all week, runs lights and HVAC. Just got prompt-injected.
-- Narrate the score as it moves: burst → **23** · salary data, outside its role → denied, **78** ·
-  patient records → **quarantined**.
+- Narrate the score: burst → **23** · salary data, outside its role → denied, **78** · patient records
+  → **quarantined**.
 - Cut off from the whole mesh, including its own job, until a human reviews it.
 - *(Stop. Two full seconds on the red node.)*
 - > **"Nothing about its identity changed. It was exactly who it said it was the entire time."**
 
-### Speaker 4 — the AI detector + the record (2:25–3:20)
+### Speaker 4 — the newcomer + the record (2:25–3:20)
 
-**Press 4 — Subtle compromise (Gemini catches it)**
-- Rules catch the obvious. But what about an agent whose every action is *allowed*?
-- This one never leaves its permissions — every request green.
-- Gemini reads the **sequence** against the agent's assigned task → critical, 95%.
-- Two detectors: rules for what's objectively wrong, an LLM for what's only wrong in context.
-- > **"The rule-based fallback can never quarantine anything. Only real Gemini can."**
+**Press 4 — Malicious new agent**
+- IntakeAgent joined this week. ANS verifies it perfectly, the whole way through.
+- It does its real job... then reaches for patient records (**5 → 60**, denied) and the decoy
+  credential vault (**→ 100**, quarantined — honeypot).
+- The counterpart to the last one: that was a trusted insider going bad, this one **never belonged**.
+- > **"Identity verified it both times. Identity is not what caught either of them."**
 
 **Click the Accountability tab**
 - Everything is on the record — **not logs, findings**.
@@ -127,19 +124,23 @@ it — the honest claim is that nothing was watching behavior, which is the gap 
 
 | Key | Button | What it runs |
 |---|---|---|
-| — | Seed history | a week of history, for the Accountability page (press before you start) |
-| **1** | Normal + decay | `normal_operation` + `permission_decay` |
-| **2** | Fake agent | `fake_agent` |
-| **3** | Compromised agent | `compromised_agent` |
-| **4** | Subtle compromise (Gemini catches it) | `subtle_exfiltration` — needs `GEMINI_MODE=real` |
-| **5** | Living tenant | the whole story as one continuous ~90s run |
-| **6** | Real LLM agent (Gemini catches it) | a genuine model-driven agent, hijacked mid-run |
+| — | Seed history | a week of history for the Accountability page (press before you start) |
+| **1** | Agents online | `agents_online` — the fleet fills the mesh (~15s, resets first) |
+| **2** | Normal + decay | `normal_operation` + `permission_decay` |
+| **3** | Compromised agent | `compromised_agent` — the trusted insider goes bad |
+| **4** | Malicious new agent | `malicious_joiner` — verified newcomer, hits the decoy vault |
+| **5** | Fake agent | `fake_agent` — unenrolled caller, denied at identity. **Never quarantined**: there's no enrolled agent to isolate |
+| **6** | Subtle compromise | `subtle_exfiltration` — Gemini catches an all-allowed sequence. Needs `GEMINI_MODE=real` |
 | **A** | Ambient | background traffic on/off — **leave it off during the pitch** |
 | **R** | Reset | stops everything and resets (confirm) |
 | **D** | — | hide the bar for a clean screen |
 
-**Buttons 5 and 6 only appear after `make sim` is restarted** — the simulator doesn't hot-reload, so
-it keeps serving whatever scenarios existed when it started.
+**Optional extra beats** if a judge has time: **5** (denied on identity alone) and **6** (the AI
+catching what rules can't). Buttons for the living-tenant run and the real-LLM agent appear after
+those.
+
+**Restart `make sim` after any pull** — the simulator doesn't hot-reload, so it keeps serving
+whatever scenarios existed when it started. New buttons won't appear until you do.
 
 **Before judges arrive:** press Seed history, then R, then Seed history once more if you ran anything.
 Confirm all agents green and the top bar reads SECURE.
