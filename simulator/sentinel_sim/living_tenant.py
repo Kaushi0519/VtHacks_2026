@@ -44,12 +44,30 @@ def _load_world() -> dict[str, Any]:
         return yaml.safe_load(f)
 
 
+# When the control API drives the tenant, narration is mirrored into a RunState so the demo bar can
+# show the same captions the terminal prints. Only one tenant runs at a time (the API refuses a
+# second), so a module-level sink is enough; run_tenant sets and clears it.
+_SINK: Any = None
+# Approximate number of scripted narration beats, used only for the demo bar's progress bar. The
+# UI clamps it, so drifting by a beat or two is harmless -- a continuous simulation has no exact
+# step count the way a scripted scenario does.
+TIMELINE_BEATS = 14
+
+
+def _narrate(text: str) -> None:
+    if _SINK is not None:
+        _SINK.caption = text
+        _SINK.step_index += 1
+
+
 def _banner(text: str) -> None:
     print(f"\n{CYAN}{BOLD}=== {text} ==={RESET}")
+    _narrate(text)
 
 
 def _caption(text: str) -> None:
     print(f"{DIM}  · {text}{RESET}")
+    _narrate(text)
 
 
 @dataclass
@@ -175,9 +193,16 @@ class Tenant:
                 await asyncio.gather(*loops, return_exceptions=True)
 
 
-async def run_tenant(url: str | None = None, pace: float = 1.0) -> None:
+async def run_tenant(url: str | None = None, pace: float = 1.0, state: Any = None) -> None:
+    """Run the continuous demo. `state` is an optional RunState the control API passes in so the
+    dashboard's demo bar narrates alongside the terminal."""
+    global _SINK
     client = SentinelClient(url) if url else SentinelClient()
+    if state is not None:
+        state.total_steps = TIMELINE_BEATS
+    _SINK = state
     try:
         await Tenant(client=client, world=_load_world(), pace=pace).run()
     finally:
+        _SINK = None
         await client.close()

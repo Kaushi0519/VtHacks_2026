@@ -7,6 +7,8 @@ Stories this history should tell on /accountability (owner: Ishan; tune with Per
   payroll-sync-bot  unverified_identity   repeated attempts, never resolvable in ANS
   partner-courier   unverified_identity   real ANS agent from another org, not enrolled here
   AnalyticsAgent    over_privileged       standing building.energy.read never used
+  IntakeAgent       healthy (short)       onboarded mid-week, so its record starts 3 days in and is
+                                          spotless -- nothing in its past predicts the live attack
   Facilities/Payroll/Database  healthy   (so today's live anomaly stands out)
 """
 
@@ -30,6 +32,15 @@ ROUTINE: dict[str, list[tuple[str, str | None]]] = {
 }
 SLOTS_PER_DAY = [(8, 5), (10, 40), (13, 15), (15, 50), (17, 30)]  # (hour, minute)
 
+# IntakeAgent is the third-party assistant world.yaml describes as onboarded "this week", so a full
+# seven days of history would contradict its own story. It starts partway through the week instead,
+# doing ordinary scheduling work with nothing denied: on the accountability page it reads healthy
+# with a short record, which is exactly what makes the live demo land -- its past predicts nothing.
+INTAKE_JOINED_DAYS_AGO = 3
+INTAKE_ROUTINE: list[tuple[str, str | None]] = [
+    ("schedule.shifts.read", None), ("schedule.shifts.write", None), ("hr.employee.read", None),
+]
+
 
 def _ago(days_back: int, hour: int, minute: int) -> timedelta:
     return timedelta(days=days_back) - timedelta(hours=hour, minutes=minute)
@@ -42,6 +53,9 @@ def build(days: int = 7) -> Scenario:
             for agent, actions in ROUTINE.items():
                 action, target = actions[(d * len(SLOTS_PER_DAY) + s) % len(actions)]
                 steps.append(Request(agent, action, target=target, ago=_ago(d, hour, minute), pause=0))
+            if d <= INTAKE_JOINED_DAYS_AGO:
+                action, target = INTAKE_ROUTINE[(d * len(SLOTS_PER_DAY) + s) % len(INTAKE_ROUTINE)]
+                steps.append(Request("intake-agent", action, target=target, ago=_ago(d, hour, minute), pause=0))
             # Analytics -> Database delegated warehouse query (same trace)
             steps.append(Request("analytics-agent", "analytics.warehouse.read", target="database-agent",
                                  ago=_ago(d, hour, minute + 1), pause=0))

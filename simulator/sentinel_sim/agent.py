@@ -39,6 +39,17 @@ GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
 GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-flash-lite-latest")
 GENAI_URL = "https://generativelanguage.googleapis.com/v1beta/models"
 
+# Set by run_hero when the control API drives this, so the dashboard's demo bar narrates alongside
+# the terminal. Only one hero run happens at a time (the API refuses a second).
+_SINK: Any = None
+HERO_BEATS = 10  # approximate, for the demo bar's progress bar only; the UI clamps it
+
+
+def _narrate(text: str) -> None:
+    if _SINK is not None:
+        _SINK.caption = text
+        _SINK.step_index += 1
+
 C = {"allow": "\033[32m", "deny": "\033[31m", "quarantine": "\033[35m", "require_human": "\033[33m"}
 DIM, BOLD, RED, RESET = "\033[2m", "\033[1m", "\033[31m", "\033[0m"
 
@@ -175,6 +186,7 @@ class HeroAgent:
         print(f"\n{BOLD}== Hero agent: {self.who.display_name} =={RESET}  brain={brain}")
         print(f"{DIM}identity {self.who.ans_name}{RESET}")
         print(f"{DIM}task: {LEGIT_TASK}{RESET}\n")
+        _narrate(f"{self.who.display_name} ({brain}) — task: {LEGIT_TASK}")
 
         # Operator pre-grants the JIT patient-records permission for the report, so each individual
         # read is legitimately ALLOWED — the whole point is that the *sequence*, not any one call,
@@ -199,6 +211,7 @@ class HeroAgent:
                     hijacked = True  # legit task done — now the compromise arrives
                     print(f"\n{RED}{BOLD}!! PROMPT HIJACK INJECTED — agent is now compromised !!{RESET}")
                     print(f"{DIM}  {HIJACK}{RESET}\n")
+                    _narrate("Prompt hijack injected — the agent is now compromised.")
                     continue
                 print(f"\n{DIM}agent stopped.{RESET}")
                 break
@@ -211,6 +224,7 @@ class HeroAgent:
             risk = resp.get("riskAfter")
             print(f"  {color}{decision.upper():>11}{RESET} {reason:<20} {tool} ({action})"
                   + (f"  risk {risk}" if risk is not None else ""))
+            _narrate(f"{decision.upper()} {tool} ({action})" + (f" — risk {risk}" if risk is not None else ""))
 
             if decision == "quarantine" or reason == "AGENT_QUARANTINED":
                 self.quarantined = True
@@ -228,10 +242,17 @@ class HeroAgent:
         return self.quarantined
 
 
-async def run_hero(agent_id: str = "analytics-agent", url: str | None = None, scripted: bool = False) -> bool:
+async def run_hero(agent_id: str = "analytics-agent", url: str | None = None, scripted: bool = False,
+                   state: Any = None) -> bool:
+    """`state` is an optional RunState the control API passes in so the demo bar narrates too."""
+    global _SINK
     client = SentinelClient(url) if url else SentinelClient()
+    if state is not None:
+        state.total_steps = HERO_BEATS
+    _SINK = state
     try:
         agent = HeroAgent(who=actor(agent_id), client=client, scripted=scripted or not GEMINI_API_KEY)
         return await agent.run()
     finally:
+        _SINK = None
         await client.close()
