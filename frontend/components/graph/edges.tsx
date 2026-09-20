@@ -75,7 +75,7 @@ export function PacketEdge(p: EdgeProps<Edge<PacketEdgeData>>) {
         <animateMotion
           ref={motion}
           begin="indefinite"
-          dur={blocked ? "0.5s" : "0.9s"}
+          dur={blocked ? "0.32s" : "0.55s"}
           fill="freeze"
           calcMode="linear"
           keyPoints={blocked ? "0;0.5" : "0;1"}

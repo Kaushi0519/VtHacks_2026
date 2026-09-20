@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { useSentinel } from "@/lib/store";
 import type { Decision } from "@/types/sentinel";
 
-export const PULSE_MS = 1600;
+export const PULSE_MS = 1100; // must outlast the longest packet animation in globals.css
 const MAX_PULSES = 24;
 
 export interface Pulse {

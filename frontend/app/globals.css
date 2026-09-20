@@ -99,7 +99,8 @@ body {
   --xy-background-color: transparent;
 }
 
-/* Mesh graph packets (components/graph/edges.tsx). Durations must fit inside PULSE_MS (1.6s). */
+/* Mesh graph packets (components/graph/edges.tsx). Durations must fit inside PULSE_MS (1.1s).
+   Travel time lives on <animateMotion dur> in edges.tsx; these follow it, so change them together. */
 @keyframes packet-fade {
   0%, 60% { opacity: 1; }
   100% { opacity: 0; }
@@ -117,11 +118,11 @@ body {
 }
 
 .packet {
-  animation: packet-fade 1.6s ease-out forwards;
+  animation: packet-fade 1s ease-out forwards;
 }
 
 .packet-trail {
-  animation: packet-trail 1.2s ease-out forwards;
+  animation: packet-trail 0.75s ease-out forwards;
 }
 
 /* Inner <g> so the CSS scale doesn't fight the translate() attribute on the outer one. */
@@ -129,7 +130,7 @@ body {
   opacity: 0;
   transform-box: fill-box;
   transform-origin: center;
-  animation: packet-block 0.35s ease-out 0.5s forwards;
+  animation: packet-block 0.3s ease-out 0.32s forwards;
 }
 
 /* New feed rows slide in so fresh decisions catch the eye. */
