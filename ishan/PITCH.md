@@ -18,33 +18,35 @@ answering questions and started taking actions, with credentials granted once an
 
 ## Script
 
-### Speaker 1 — hook (0:00–1:00)
-> "This summer, twelve hundred AI agents were running inside OpenAI's sandboxes with safety measures
-> turned down. With no human directing them, they built their own message boards to coordinate an
-> escape — hundreds of thousands of messages. Nobody caught it from the inside. OpenAI found out when
-> **Hugging Face disclosed that its production infrastructure had been breached.** A third of it had to
-> be rebuilt.
+### Speaker 1 — hook (0:00–1:05)
+> "This summer, twelve hundred AI agents ran inside OpenAI's sandboxes with safety measures turned
+> down. With no human directing them, they built their own message boards to coordinate an escape.
+> Nobody caught it from the inside — OpenAI found out when **Hugging Face disclosed that its
+> production infrastructure had been breached.** A third of it had to be rebuilt.
 >
 > The reaction split. Eleven hundred people who build these systems signed a letter asking to be
-> regulated, and Anthropic's CEO keeps warning we're outrunning our ability to make this safe. The
-> other side says don't fear growth — the administration is pushing to build faster, and companies
-> keep shipping agents, because they work.
+> regulated, and Anthropic's CEO says we're outrunning our ability to make this safe. The other side
+> says don't fear growth — the administration wants speed, and companies keep shipping agents, because
+> they work.
 >
-> We're not here to settle that. Because while that argument runs, the thing everyone is arguing about
-> already happened: agents stopped answering questions and started taking actions. Boundaries on what
-> they *say* won't help. Boundaries on what they can **do** will.
+> We're not here to settle that. While that argument runs, the thing everyone is arguing about already
+> happened: agents stopped answering questions and started taking actions. Boundaries on what they
+> *say* won't help. Boundaries on what they can **do** will.
 >
 > Every one of those agents was authorized to be exactly where it started. Nothing was watching what
 > it did next."
 
-*(Two on each side, one shared fact. Don't add a fifth citation — it costs 10 seconds and buys nothing.)*
+**Two on each side, one shared fact.** Build: the administration wants speed; companies ship agents
+because they work. Caution: Anthropic's CEO on pace; 1,100 employees petitioning to be regulated.
+The incident is not a side — it is what both sides are reacting to, which is what keeps this
+neutral. Don't add a fifth citation: it costs ~10 seconds and buys nothing.
 
 **Sourcing rule:** whoever delivers this must have read the coverage themselves. Wikipedia's
 "OpenAI–HuggingFace incident" is the summary; check primary reporting before stage. If a judge
 challenges a number, say what you know and don't improvise. Never claim Sentinel would have prevented
 it — the honest claim is that nothing was watching behavior, which is the gap we built for.
 
-### Speaker 2 — what it is (0:55–1:20) · **start the tenant run as you begin speaking**
+### Speaker 2 — what it is (1:05–1:25) · **start the tenant run as you begin speaking**
 > "So we built Sentinel Mesh: a zero-trust security gateway for networks of AI agents. Every action an
 > agent takes goes through it, and it decides — allow, deny, or isolate — in real time.
 >
@@ -57,7 +59,7 @@ it — the honest claim is that nothing was watching behavior, which is the gap 
 > What you're watching is a hospital: six ANS-verified agents doing their normal jobs. Green means
 > allowed. This is a system behaving."
 
-### Speaker 3 — the living hospital (1:20–2:50) · narrate what appears, don't read the clock
+### Speaker 3 — the living hospital (1:25–2:45) · narrate what appears, don't read the clock
 Cue off the **screen**, not the stopwatch — the run paces itself.
 
 **When the countdown appears on AnalyticsAgent:**
@@ -82,7 +84,7 @@ Cue off the **screen**, not the stopwatch — the run paces itself.
 > "That agent's identity was never the problem. It was exactly who it claimed to be. Its *behavior*
 > was the problem — and that's the thing an identity check can't see."
 
-### Speaker 4 — what the rules can't catch (2:50–3:25)
+### Speaker 4 — what the rules can't catch (2:45–3:20)
 *(Click the incident → the "Why" panel.)*
 > "Those two were caught by deterministic rules — forbidden scope, rate spikes, hard thresholds. Fast,
 > explainable, no AI in the decision path.
@@ -93,7 +95,7 @@ Cue off the **screen**, not the stopwatch — the run paces itself.
 >
 > Two detectors: rules for what's objectively wrong, an LLM for what's only wrong in context."
 
-### Speaker 1 — close (3:25–4:00) · the person who opened, closes
+### Speaker 1 — close (3:20–4:00) · the person who opened, closes
 *(Accountability tab.)*
 > "And afterwards, the company can finally answer a question it couldn't before: what have our agents
 > actually been doing? Not logs — findings. This one is misconfigured. This one holds permissions it
@@ -111,11 +113,11 @@ Cue off the **screen**, not the stopwatch — the run paces itself.
 
 | Time | Who | On screen |
 |---|---|---|
-| 0:00–0:55 | S1 | dashboard idle, all green |
-| 0:55–1:20 | S2 | **start `tenant` now**; fleet comes online |
-| 1:20–2:50 | S3 | decay countdown → malfunction quarantine → malicious quarantine |
-| 2:50–3:25 | S4 | incident "Why" panel, Gemini reasoning |
-| 3:25–4:00 | S1 | accountability page, close |
+| 0:00–1:05 | S1 | dashboard idle, all green |
+| 1:05–1:25 | S2 | **start `tenant` now**; fleet comes online |
+| 1:25–2:45 | S3 | decay countdown → malfunction quarantine → malicious quarantine |
+| 2:45–3:20 | S4 | incident "Why" panel, Gemini reasoning |
+| 3:20–4:00 | S1 | accountability page, close |
 
 **Start the run:** `cd simulator && uv run python -m sentinel_sim tenant --pace 1.3` (~2 min), or the
 demo-bar button (Kiernan wired `tenant` + `agent` in `cb22302`). Press it as Speaker 2 opens their
