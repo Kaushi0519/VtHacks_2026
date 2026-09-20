@@ -26,6 +26,11 @@ def service():
     ({"status":"ACTIVE", "ansName":"wrong"}, False),
     ({"status":"REVOKED", "ansName":NAME}, False),
     ([], False),
+    ({"status":"ACTIVE", "payload":{"producer":{"event":{"ansName":NAME}}}}, True),
+    ({"status":"ACTIVE", "payload":{"producer":{"event":{"ansName":"wrong"}}}}, False),
+    ({"status":"ACTIVE", "payload":{"producer":{"event":{}}}}, False),
+    ({"status":"ACTIVE", "payload":[]}, False),
+    ({"status":"ACTIVE", "ansName":NAME, "payload":{"producer":{"event":{"ansName":"wrong"}}}}, False),
 ])
 def test_badge_identity_must_be_explicit(badge, expected):
     s = service()
