@@ -118,6 +118,16 @@ class ReferenceANSService:
 
         status = str(badge.get("status", "UNKNOWN"))
         badge_name = badge.get("ansName") or badge.get("ans_name")
+        # Reference implementation V2 nests the name in the producer event.
+        # Require an explicit match; malformed/missing nesting must fail closed.
+        event = badge
+        for key in ("payload", "producer", "event"):
+            event = event.get(key) if isinstance(event, dict) else None
+        if isinstance(event, dict):
+            event_name = event.get("ansName")
+            if badge_name is not None and badge_name != event_name:
+                event_name = None  # conflicting identity claims are never accepted
+            badge_name = event_name
         name_matches = isinstance(badge_name, str) and badge_name == ans_name
 
         # 3. Cryptographic receipt verification via the official offline verifier.

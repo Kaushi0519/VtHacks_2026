@@ -1,5 +1,33 @@
 # ANS integration (real) — Owner: Person 3
 
+## Local Windows validation (2026-09-19)
+
+The local reference stack at source commit `52d2fc5` has now been exercised:
+five hospital agents and the unenrolled partner registered and activated, all five hospital receipts verified by the
+compiled Windows `ans-verify`, and an unregistered caller rejected. V2 badges put
+the name at `payload.producer.event.ansName`; the adapter now supports that shape
+and rejects missing or conflicting names. The verifier's exact success line matches
+the existing strict parser.
+
+This laptop stores its verifier, registration records, private keys, and a copy of
+the world configuration under `%LOCALAPPDATA%/SentinelMesh`. These are local assets,
+not repository files. `WORLD_FILE` selects `world.local.yaml`; `ANS_VERIFY_BIN`
+selects `ans-verify.exe`. Other machines must register their own agents or connect
+to the same ANS instance; copying placeholder IDs does not register an agent.
+
+The Docker RA required enabling `ca.server` with `type: self`, an organization,
+`validity-days: 365`, and persistent `data-dir: /var/lib/ans-ra/server-ca` in the
+adjacent ANS checkout's `config/ra-docker.yaml`, then restarting `ans-ra`.
+Trust bootstrap follows upstream `scripts/docker-compose-bootstrap.sh`. Registration
+uses matching identity URI SAN and server DNS SAN CSRs, then `verify-acme` and
+`verify-dns`, as in upstream `scripts/demo/run-lifecycle.sh`.
+
+**Demo boundary:** this stack uses a development CA and `dns.type: noop`.
+It demonstrates local registration and cryptographic receipt verification, not
+public DNS/domain-control validation, a production trust anchor, or caller mTLS.
+Keep Docker's `ans-ra` and `ans-tl` running when using real mode. Do not remove their
+data volumes: the local IDs and trust material depend on them.
+
 **What changed:** the earlier design assumed a GoDaddy hosted REST API at `api.godaddy.com`. That was
 wrong. Real ANS ("Best Use of ANS" track, judged by Scott Courtney, the ANS architect) is the **open
 reference implementation**, run locally. Our adapter now targets it and does *real cryptographic
@@ -89,9 +117,9 @@ lead time); the hosted API is a drop-in alternate once we have a PAT + the prod 
 
 ## ⚠️ Validate against the running stack before trusting it in the demo
 
-This adapter is written to the documented API but has **not** been run against a live ANS stack yet.
-Confirm on the running `/docs` (Swagger) and fix `reference.py` if needed:
-- the TL badge JSON key that holds lifecycle status (assumed `status`)
+The local Windows stack above has now been validated. Recheck these assumptions when
+changing ANS versions:
+- lifecycle is top-level `status`; V2 name is `payload.producer.event.ansName`
 - the `ans-verify` success output (assumed a line containing `VERIFIED`, exit 0)
 - optionally resolve via the `_ans` DNS TXT record (`ans-dns`) instead of the seeded map
 
