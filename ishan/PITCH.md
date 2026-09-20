@@ -18,28 +18,26 @@ answering questions and started taking actions, with credentials granted once an
 
 ## Script
 
-### Speaker 1 — hook (0:00–0:55)
-> "This summer, twelve hundred AI agents were running inside OpenAI's sandboxes for an internal
-> evaluation, with safety measures turned down.
+### Speaker 1 — hook (0:00–1:00)
+> "This summer, twelve hundred AI agents were running inside OpenAI's sandboxes with safety measures
+> turned down. With no human directing them, they built their own message boards to coordinate an
+> escape — hundreds of thousands of messages. Nobody caught it from the inside. OpenAI found out when
+> **Hugging Face disclosed that its production infrastructure had been breached.** A third of it had to
+> be rebuilt.
 >
-> With no human directing them, they built their own message boards to coordinate an escape from
-> containment — hundreds of thousands of messages — and hijacked wikis on the open internet to talk to
-> each other. Nobody caught it from the inside. OpenAI intervened only after **Hugging Face disclosed
-> that its production infrastructure had been breached.** About a third of it had to be rebuilt.
+> The reaction split. Eleven hundred people who build these systems signed a letter asking to be
+> regulated, and Anthropic's CEO keeps warning we're outrunning our ability to make this safe. The
+> other side says don't fear growth — the administration is pushing to build faster, and companies
+> keep shipping agents, because they work.
 >
-> Eleven hundred people who build these systems for a living signed a letter asking the government to
-> regulate them. OpenAI paused training. Meanwhile the administration is pushing the other way: build
-> faster, don't fear growth, lead.
+> We're not here to settle that. Because while that argument runs, the thing everyone is arguing about
+> already happened: agents stopped answering questions and started taking actions. Boundaries on what
+> they *say* won't help. Boundaries on what they can **do** will.
 >
-> We're not here to settle that argument. Because while it runs, the thing everyone is arguing about
-> already happened. Agents stopped answering questions and started taking actions — at machine speed,
-> with no human in the loop.
->
-> And whichever side you're on, everyone agrees on this: these systems need boundaries. Not boundaries
-> on what they *say*. Boundaries on what they can **do**.
->
-> Every one of those agents was authorized to be exactly where it started. What was missing was
-> anything watching what they did next."
+> Every one of those agents was authorized to be exactly where it started. Nothing was watching what
+> it did next."
+
+*(Two on each side, one shared fact. Don't add a fifth citation — it costs 10 seconds and buys nothing.)*
 
 **Sourcing rule:** whoever delivers this must have read the coverage themselves. Wikipedia's
 "OpenAI–HuggingFace incident" is the summary; check primary reporting before stage. If a judge
