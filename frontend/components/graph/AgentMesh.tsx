@@ -257,7 +257,7 @@ function Mesh() {
     <div className="flex h-full min-h-0 flex-col">
       <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1 px-3 pt-3 pb-1">
         <h2 className="panel-title">Agent mesh</h2>
-        <span className="hidden text-[11px] text-dim 2xl:inline">every request passes through Sentinel</span>
+        <span className="hidden text-[11px] text-dim 2xl:inline">every request passes through Lattice</span>
         <Legend />
       </div>
       <div ref={wrapper} className="relative min-h-0 flex-1">
@@ -318,7 +318,7 @@ function Legend() {
         <span className="h-2 w-2 rounded-full bg-ok" /> ALLOWED
       </span>
       <span className="flex items-center gap-1.5">
-        <span className="text-crit">✕</span> BLOCKED BY SENTINEL
+        <span className="text-crit">✕</span> BLOCKED BY LATTICE
       </span>
       <span className="flex items-center gap-1.5">
         <span className="w-4 border-t border-dashed border-crit" /> ISOLATED

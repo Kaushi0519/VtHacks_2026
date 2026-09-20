@@ -27,7 +27,7 @@ export function Inspector() {
   if (!agent && !decision) {
     return (
       <section className="panel mx-3 mb-3 px-4 py-2 text-center text-xs text-dim">
-        Click an agent in the mesh, or any decision in the live feed, to see why Sentinel decided what it did.
+        Click an agent in the mesh, or any decision in the live feed, to see why Lattice decided what it did.
       </section>
     );
   }

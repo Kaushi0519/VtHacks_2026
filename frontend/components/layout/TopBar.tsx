@@ -15,8 +15,8 @@ export function TopBar() {
   return (
     <header className="flex items-center gap-6 border-b border-line bg-panel/80 px-5 py-2.5 backdrop-blur">
       <Link href="/" className="flex items-center gap-2.5">
-        <ShieldMark />
-        <span className="font-mono text-base font-bold tracking-[0.3em] text-accent">SENTINEL MESH</span>
+        <LatticeMark />
+        <span className="font-mono text-base font-bold tracking-[0.35em] text-accent">LATTICE</span>
       </Link>
       {system && <span className="text-sm text-dim">{system.tenantName}</span>}
 
@@ -90,12 +90,29 @@ function ModeBadge({ live, label, title }: { live: boolean; label: string; title
   );
 }
 
-function ShieldMark() {
+function LatticeMark() {
+  // Six vertices around a hexagon, each joined to its neighbours and spoked to a brighter core --
+  // the product in one glyph: a mesh of agents with a control plane in the middle.
+  const r = 9;
+  const pts = Array.from({ length: 6 }, (_, i) => {
+    const a = (Math.PI / 3) * i - Math.PI / 2;
+    return [12 + r * Math.cos(a), 12 + r * Math.sin(a)] as const;
+  });
   return (
-    <svg viewBox="0 0 24 24" className="h-6 w-6 text-accent" fill="none" stroke="currentColor" strokeWidth={1.8} aria-hidden>
-      <path d="M12 2.5 4 5.5v6c0 5 3.4 8.7 8 10 4.6-1.3 8-5 8-10v-6l-8-3Z" />
-      <circle cx="12" cy="11" r="1.6" fill="currentColor" />
-      <path d="M12 11 8.5 8.5M12 11l3.5-2.5M12 11v4.5" />
+    <svg viewBox="0 0 24 24" className="h-6 w-6 text-accent" fill="none" aria-hidden>
+      <g stroke="currentColor" strokeWidth={1.1} strokeLinecap="round" opacity={0.75}>
+        {pts.map(([x, y], i) => {
+          const [nx, ny] = pts[(i + 1) % 6];
+          return <line key={`r${i}`} x1={x} y1={y} x2={nx} y2={ny} />;
+        })}
+        {pts.map(([x, y], i) => (
+          <line key={`s${i}`} x1={x} y1={y} x2={12} y2={12} opacity={0.55} />
+        ))}
+      </g>
+      {pts.map(([x, y], i) => (
+        <circle key={`v${i}`} cx={x} cy={y} r={1.9} fill="currentColor" />
+      ))}
+      <circle cx={12} cy={12} r={2.4} fill="currentColor" />
     </svg>
   );
 }

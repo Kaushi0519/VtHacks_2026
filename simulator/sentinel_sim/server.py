@@ -12,7 +12,7 @@ from sentinel_sim.client import DEFAULT_URL, SentinelClient
 from sentinel_sim.scenario import RunState, run_scenario
 from sentinel_sim.scenarios import SCENARIOS
 
-app = FastAPI(title="Sentinel Mesh Simulator", version="0.1.0")
+app = FastAPI(title="Lattice Simulator", version="0.1.0")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=os.environ.get("SIM_CORS_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000").split(","),

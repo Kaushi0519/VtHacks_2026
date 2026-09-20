@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Sentinel Mesh",
+  title: "Lattice",
   description: "Zero-trust control plane for AI agent networks",
 };
 

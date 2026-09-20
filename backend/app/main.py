@@ -39,7 +39,7 @@ async def lifespan(app: FastAPI):
             await sweeper
 
 
-app = FastAPI(title="Sentinel Mesh", version="0.1.0", lifespan=lifespan)
+app = FastAPI(title="Lattice", version="0.1.0", lifespan=lifespan)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=get_settings().cors_origins,

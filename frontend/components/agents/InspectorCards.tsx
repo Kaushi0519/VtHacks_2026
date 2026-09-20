@@ -67,9 +67,9 @@ export function BehaviorCard({ agent, event }: { agent: Agent | null; event: Sen
 
   if (score === null) {
     return (
-      <Section title="Behavior · Sentinel" subtitle="is it behaving?">
+      <Section title="Behavior · Lattice" subtitle="is it behaving?">
         <p className="text-sm text-slate-400">
-          Never scored. Sentinel stopped this caller at the identity check, before any behavior was evaluated.
+          Never scored. Lattice stopped this caller at the identity check, before any behavior was evaluated.
         </p>
       </Section>
     );
@@ -77,7 +77,7 @@ export function BehaviorCard({ agent, event }: { agent: Agent | null; event: Sen
 
   const level = policy ? levelFor(score, policy) : agent?.riskLevel ?? "low";
   return (
-    <Section title="Behavior · Sentinel" subtitle="is it behaving?">
+    <Section title="Behavior · Lattice" subtitle="is it behaving?">
       <p className="font-mono">
         {moved && event.riskBefore !== event.riskAfter && (
           <span className="text-xl text-dim">{event.riskBefore} → </span>
@@ -240,13 +240,13 @@ export function AnalysisBox({
 
       {aiQuarantine ? (
         <p className="mt-1 text-[10px] text-crit">
-          AI-TRIGGERED QUARANTINE · Gemini&apos;s finding caused this isolation. Sentinel enforces it only for real
+          AI-TRIGGERED QUARANTINE · Gemini&apos;s finding caused this isolation. Lattice enforces it only for real
           Gemini analysis rated CRITICAL at high confidence; the rule-based fallback never enforces.
           {quarantineReason && <span className="mt-0.5 block text-slate-300">{quarantineReason}</span>}
         </p>
       ) : gemini ? (
         <p className="mt-1 text-[10px] text-dim">
-          Advisory here. Gemini&apos;s severity adds bounded points to the Behavioral Risk Score — Sentinel owns the
+          Advisory here. Gemini&apos;s severity adds bounded points to the Behavioral Risk Score — Lattice owns the
           number — and this decision was made by deterministic policy.
         </p>
       ) : (
