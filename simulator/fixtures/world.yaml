@@ -1,4 +1,4 @@
-# Sentinel Mesh demo tenant: a hospital running five AI agents.
+# Lattice demo tenant: a hospital running six AI agents.
 #
 # Owner: Ishan (demo data). Person 3 co-owns `roles` and `riskPolicy` (security semantics).
 # Read by BOTH the backend (seeding, policy, graph) and the simulator (who can act).

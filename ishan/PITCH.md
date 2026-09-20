@@ -2,9 +2,8 @@
 
 Owner: Ishan. Rehearse from this; the beats match `docs/DEMO.md`.
 
-> **Name check before judging:** the UI top bar says **SENTINEL MESH**. If we pitch "Lattice", the
-> screen contradicts the words within ten seconds. Either change the wordmark first or say what's on
-> screen. This script says Sentinel.
+> **Name:** the product is **Lattice** — not "Lattice Mesh", not "lattice.luxe" (that's just where
+> it's deployed). The top bar says Lattice too, so the words and the screen agree.
 
 ## The hook (why it works)
 
@@ -49,7 +48,7 @@ answers without taking a side.
 
 **Sourcing rule:** whoever delivers this must have read the coverage themselves. Wikipedia's
 "OpenAI–HuggingFace incident" is the summary; check primary reporting before stage. If a judge
-challenges a number, say what you know and don't improvise. Never claim Sentinel would have prevented
+challenges a number, say what you know and don't improvise. Never claim Lattice would have prevented
 it — the honest claim is that nothing was watching behavior, which is the gap we built for.
 
 > **How to use this:** bullets are *points*, not lines — say them your way. Only the **bold quoted

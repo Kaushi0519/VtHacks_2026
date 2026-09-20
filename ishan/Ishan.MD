@@ -1,6 +1,6 @@
 # Ishan — role, ownership, and next steps
 
-My working file for Sentinel Mesh. Source of truth stays `CLAUDE.md` + `docs/TASKS.md`;
+My working file for Lattice. Source of truth stays `CLAUDE.md` + `docs/TASKS.md`;
 this is my lane in one page. Last updated 2026-09-19.
 
 ## What I own
@@ -158,7 +158,7 @@ cd simulator && uv run python -m sentinel_sim run <scenario> --check
   `ANS MOCK` / `AI: RULE-BASED`. If ANS or Gemini is down during the demo, I switch to mock, say so
   out loud, and keep going. Getting caught dressing mock output as a live API call ends our run.
 - **Never call the risk score a "trust score."** It's the **Behavioral Risk Score**, ours, separate
-  from anything ANS exposes. The whole thesis line is: *ANS tells Sentinel who the agent is; Sentinel
+  from anything ANS exposes. The whole thesis line is: *ANS tells Lattice who the agent is; Lattice
   decides whether its behavior still deserves access.*
 - **Gemini explains, it never decides.** Deterministic policy decides, off the request path.
 - If asked how we stop ANS-name spoofing: our MVP checks registration + lifecycle; production adds

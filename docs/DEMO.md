@@ -17,7 +17,7 @@
 | # | Say | Click | Judges see |
 |---|---|---|---|
 | 0 | "Hospitals now run autonomous AI agents that touch payroll, patient records, buildings." | nothing | green mesh, live feed |
-| 1 | "Every agent action flows through Sentinel. Identity comes from GoDaddy's Agent Name Service." | **Normal operation** + **Permission decay** (start decay now, it counts down in the background) | green edges, ✓ ALLOW, "ANS VERIFIED"; AnalyticsAgent gets a 45s patient-records grant |
+| 1 | "Every agent action flows through Lattice. Identity comes from GoDaddy's Agent Name Service." | **Normal operation** + **Permission decay** (start decay now, it counts down in the background) | green edges, ✓ ALLOW, "ANS VERIFIED"; AnalyticsAgent gets a 45s patient-records grant |
 | 2 | "An unknown agent claims to be a payroll sync service." | **Fake agent** | ✕ DENY IDENTITY_UNVERIFIED, ANS status NOT_FOUND, incident linked to earlier probes this week |
 | 3 | "Now the hard case: the *real* FacilitiesAgent gets prompt-injected." | **Compromised legitimate agent** | request burst → risk 8→23; payroll.salary.read → DENY, risk 78 HIGH; patient.records.read → **QUARANTINE**, risk 100; node turns red, edges cut; its normal lights request is also denied |
 | 3b | **"That agent wasn't fake. ANS verified exactly who it was. Its behavior changed. Identity alone isn't enough."** | click the incident | IDENTITY: VERIFIED vs BEHAVIORAL RISK: 100 CRITICAL; the WHY panel shows Gemini's explanation |
@@ -25,7 +25,7 @@
 | 5 | "And the company can finally see what its agents have been doing." | **Accountability** tab | FacilitiesAgent *possibly compromised*; SchedulingAgent *likely misconfigured* (12 denied payroll.hours.write in 7 days); payroll-sync-bot *unverified identity*; AnalyticsAgent *over-privileged* (never uses building.energy.read) |
 | 5c | **"Rules catch known violations. But what about an agent whose every action is *allowed*?"** | **Subtle compromise** (needs `GEMINI_MODE=real`) | AnalyticsAgent (task: de-identified readmissions summary) starts bulk-aggregating patient records — every request ALLOW, static risk stays low |
 | 5d | **"Static policy passed all of it. Gemini read the *sequence* and saw exfiltration."** | click the incident | STATIC POLICY: no violation · **GEMINI: CRITICAL** (task deviation, possible exfiltration) → **AI-triggered QUARANTINE**; reasoning + confidence shown |
-| 6 | **"ANS tells Sentinel who the agent is. Deterministic rules catch the obvious. Gemini catches what only understanding the task could."** | | |
+| 6 | **"ANS tells Lattice who the agent is. Deterministic rules catch the obvious. Gemini catches what only understanding the task could."** | | |
 
 ## If something breaks
 - Dashboard stale or odd: **Reset**, then `make backfill`, then rerun from step 1.
@@ -39,7 +39,7 @@
   cases instantly (identity, forbidden scope, honeypot). Gemini is the **semantic** detector: it judges
   whether a *sequence* of individually-permitted actions fits the agent's role + task, and it can trigger
   quarantine on a CRITICAL finding at ≥85% confidence — real Gemini only, never the rule-based fallback,
-  and always with its reasoning logged. Sentinel owns the numeric score; Gemini never invents one.
+  and always with its reasoning logged. Lattice owns the numeric score; Gemini never invents one.
 - *How is the risk score computed?* Transparent weighted signals (ARCHITECTURE §7). A heuristic, not a trained model.
 - *What stops an agent spoofing an ANS name?* Our MVP checks registration + lifecycle. Production adds mTLS with the ANS identity certificate. We haven't built that yet.
 - *Can an attacker train the baseline?* Profiles learn only from allowed requests.
