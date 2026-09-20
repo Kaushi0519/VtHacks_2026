@@ -3,7 +3,7 @@
 // Every gateway decision fires a packet (green = allowed, red ✕ = blocked at Sentinel).
 // Quarantined agents turn red and their links are cut. Unknown actors appear as ghost nodes.
 // Live just-in-time grants draw as dashed edges with a countdown (big timer lives in the agent sidebar).
-import { Background, ReactFlow, ReactFlowProvider, useReactFlow, type CoordinateExtent, type Edge, type Node } from "@xyflow/react";
+import { Background, ReactFlow, ReactFlowProvider, useReactFlow, useUpdateNodeInternals, type CoordinateExtent, type Edge, type Node } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import { isOnStage, isTemporary, resourceForScope } from "@/lib/grants";
@@ -47,6 +47,7 @@ function Mesh() {
     .join(",");
   const wrapper = useRef<HTMLDivElement>(null);
   const { setViewport } = useReactFlow();
+  const updateNodeInternals = useUpdateNodeInternals();
   // The mesh's own bounding box in flow units, published by the layout memo below.
   const boundsRef = useRef<Bounds | null>(null);
 
@@ -90,8 +91,26 @@ function Mesh() {
       if (!el) return;
       const pane = el.getBoundingClientRect();
       if (pane.width < 1 || pane.height < 1) return;
-      const rendered = el.querySelectorAll(".react-flow__node");
+      const rendered = [...el.querySelectorAll<HTMLElement>(".react-flow__node")];
       if (rendered.length === 0) return;
+
+      // React Flow keeps a node `visibility: hidden` until it has measured it, and it measures with
+      // a ResizeObserver -- which Chrome freezes while the tab is in the background. If that
+      // measurement never lands the nodes stay hidden forever: no edges are drawn either, and
+      // fitView sees empty bounds, which is why RECENTER looked dead and only a remount helped.
+      // Force a re-measure.
+      if (rendered.every((n) => n.style.visibility === "hidden")) {
+        const ids = rendered.map((n) => n.getAttribute("data-id")).filter((id): id is string => Boolean(id));
+        if (ids.length > 0) updateNodeInternals(ids);
+        // And show them regardless. Re-measuring is the proper repair, but it only helps if React
+        // Flow then re-renders them; this layout positions every node explicitly, so an unmeasured
+        // node is still in exactly the right place and is always safe to show. A blank mesh on
+        // stage is the one outcome worth ruling out completely.
+        rendered.forEach((n) => { n.style.visibility = "visible"; });
+        refit();
+        return;
+      }
+
       for (const node of rendered) {
         const r = node.getBoundingClientRect();
         if (r.right > pane.left && r.left < pane.right && r.bottom > pane.top && r.top < pane.bottom) return;
@@ -99,7 +118,7 @@ function Mesh() {
       refit();
     }, 1000);
     return () => window.clearInterval(id);
-  }, [refit]);
+  }, [refit, updateNodeInternals]);
 
   // ...and when the tab comes back. A backgrounded tab has its ResizeObserver and rAF frozen, so a
   // panel resize that happens while you are away (a grant countdown appearing, the inspector) never
