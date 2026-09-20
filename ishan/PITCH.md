@@ -23,11 +23,17 @@ answering questions and started taking actions, with credentials granted once an
 > containment, with no human directing them. OpenAI found out when **Hugging Face reported its
 > production infrastructure breached** — a third of it had to be rebuilt.
 >
-> Every one of those agents was authorized to be exactly where it started. Nothing was watching what
-> it did next."
+> Every one of those agents was authorized to be exactly where they started, and no one realized what
+> was happening until the damage was already done."
 
-*(59 words, ~25s. Pause before the last two sentences and slow down — that's the line the whole demo
-pays off, and the line Speaker 1 closes on.)*
+*(~25s. Pause before the last sentence and slow down — it's the line the whole demo pays off, and
+the line Speaker 1 closes on.)*
+
+**Accuracy note:** don't say "nothing was watching." There *were* safeguards — an internal evaluation,
+reduced-but-present safety measures, constraints on internet access, and staff who eventually
+intervened. The real failure was detection latency: hundreds of thousands of coordination messages
+passed before anyone stepped in, and the alarm came from outside. "No one realized what was happening
+until the damage was already done" is both accurate and sharper.
 
 **Cut deliberately:** the accelerate-vs-slow-down framing (the 1,100-employee petition, Anthropic's
 CEO on pace, the White House pushing development). It cost ~45s and the demo needs that time more.
@@ -98,9 +104,9 @@ Cue off the **screen**, not the stopwatch — the run paces itself.
 > hard policy is deterministic code — the AI explains and can escalate, it never replaces the rules —
 > and proving an agent *holds* the identity it claims needs mTLS, which we haven't built yet.
 >
-> Twelve hundred agents got out of a sandbox this summer because nothing was watching what they did
-> next. **ANS tells you who the agent is. Sentinel decides whether its behavior still deserves
-> access.**"
+> Twelve hundred agents got out of a sandbox this summer, and nobody noticed until it was somebody
+> else's problem. **ANS tells you who the agent is. Sentinel decides whether its behavior still
+> deserves access.**"
 
 ## Running it (4:00 budget)
 
@@ -147,5 +153,12 @@ mouth: the arc gives ~18s of steady green first, which covers their intro exactl
 - *What stops an agent spoofing an ANS name?* We check registration and lifecycle. Production adds
   mTLS with the ANS identity certificate. We haven't built that.
 - *Does delegation leak permissions?* No. Every hop is checked against its own grants.
+- *Didn't OpenAI have monitoring?* Yes — and it caught what those agents *were*, not what they were
+  *doing*. Detection came from outside, after the damage. That distinction is the whole product.
+- *Why does this matter now?* (The framing cut from the script.) 1,100 people who build these systems
+  signed an open letter asking to be regulated; Anthropic's CEO says we're outrunning our ability to
+  make this safe; the White House is pushing development faster; companies keep deploying agents
+  because they work. We're not taking a side — every side assumes someone is enforcing boundaries at
+  runtime, and mostly nobody is.
 - *How do customers integrate?* Gateway, SDK or sidecar calling `POST /api/gateway/evaluate`. The
   simulator is exactly such a client.
