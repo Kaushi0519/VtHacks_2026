@@ -1,6 +1,6 @@
 "use client";
 // Owner: Person 2. Inspector columns. Identity and behavior are deliberately separate cards:
-// ANS answers "who is it?", Sentinel answers "is it behaving?". Never merge them into one "trust".
+// ANS answers "who is it?", Lattice answers "is it behaving?". Never merge them into one "trust".
 import clsx from "clsx";
 import { levelFor, riskColor, riskFill, time } from "@/lib/format";
 import { useSentinel } from "@/lib/store";
@@ -140,7 +140,7 @@ function aiTriggeredQuarantine(incident: Incident, events: SentinelEvent[]): boo
   return q ? Boolean(q.reason?.includes("Gemini")) : true;
 }
 
-// What the deterministic half of Sentinel saw in the requests leading up to this finding. Scoped to
+// What the deterministic half of Lattice saw in the requests leading up to this finding. Scoped to
 // the events we actually hold and labeled with that count, so "clean" is a checkable claim about a
 // stated window rather than a blanket assertion.
 function staticChecks(agentId: string, events: SentinelEvent[], until: string) {

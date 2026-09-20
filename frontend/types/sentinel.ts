@@ -37,7 +37,7 @@ export interface Agent {
   ansName: string;
   identity: IdentityResult | null;
   status: "active" | "quarantined";
-  riskScore: number; // Sentinel Behavioral Risk Score, NOT an ANS trust score
+  riskScore: number; // Lattice Behavioral Risk Score, NOT an ANS trust score
   riskLevel: RiskLevel;
   baselineRisk: number;
   riskUpdatedAt: string;

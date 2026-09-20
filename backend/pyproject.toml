@@ -1,7 +1,7 @@
 [project]
 name = "sentinel-backend"
 version = "0.1.0"
-description = "Sentinel Mesh: zero-trust gateway + control plane for AI agent networks"
+description = "Lattice: zero-trust gateway + control plane for AI agent networks"
 requires-python = ">=3.11"
 dependencies = [
   "fastapi>=0.115",

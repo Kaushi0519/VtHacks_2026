@@ -1,11 +1,11 @@
 """Living-tenant orchestrator: the whole healthcare demo as one continuous simulation.
 
-Prototype on demo/hero-agent (simulator lane). Models a hospital that has adopted Sentinel:
+Prototype on demo/hero-agent (simulator lane). Models a hospital that has adopted Lattice:
 its fleet of ANS-verified agents runs its normal jobs continuously (steady green traffic), while
 two things go wrong on a timeline — the two DIFFERENT quarantine stories:
 
   1. MALFUNCTION  — SchedulingAgent's automation loop runs away: it floods the gateway (rate spike)
-     and drifts into resources outside its role. Behavioral risk climbs past critical and Sentinel
+     and drifts into resources outside its role. Behavioral risk climbs past critical and Lattice
      quarantines it deterministically. "A buggy insider you must isolate before it does damage."
   2. MALICIOUS    — a newly onboarded, ANS-verified agent (IntakeAgent, valid identity + name) does a
      little normal work, then deliberately reaches for the credential vault and patient records it has
@@ -130,7 +130,7 @@ class Tenant:
         await self._beat(3.0)
         await self._fire(MALFUNCTION_AGENT, "patient.records.read", source="tenant:malfunction", show=True)
         await self._beat(3.0)
-        _caption("Behavioral risk crossed critical — Sentinel quarantined it. Its normal work now blocks too.")
+        _caption("Behavioral risk crossed critical — Lattice quarantined it. Its normal work now blocks too.")
         await self._beat(2.0)
         await self._fire(MALFUNCTION_AGENT, "schedule.shifts.read", source="tenant:malfunction", show=True)
         await self._beat(2.5)
@@ -173,7 +173,7 @@ class Tenant:
     async def run(self) -> None:
         await self.client.reset()
         core = [a["id"] for a in self.world["agents"] if a["id"] != MALICIOUS_AGENT]
-        _banner("Mercy General Hospital — its agent fleet is online under Sentinel")
+        _banner("Mercy General Hospital — its agent fleet is online under Lattice")
         _caption(f"{len(core)} ANS-verified agents doing their normal jobs. Risk stays low; the mesh is green.")
         loops = [asyncio.create_task(self.normal_loop(aid)) for aid in core]
         try:

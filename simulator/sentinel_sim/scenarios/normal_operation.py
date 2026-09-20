@@ -15,7 +15,7 @@ def build() -> Scenario:
     return Scenario(
         id="normal_operation",
         title="Normal operation",
-        description="Every agent does its normal job. ANS verifies each one; Sentinel allows; risk stays low.",
+        description="Every agent does its normal job. ANS verifies each one; Lattice allows; risk stays low.",
         steps=[Note("Normal hospital operations. Every request is ANS-verified and policy-checked."), *STEPS],
     )
 

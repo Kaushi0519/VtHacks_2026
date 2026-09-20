@@ -1,4 +1,4 @@
-# Sentinel Mesh Architecture
+# Lattice Architecture
 
 ## 1. System overview
 
@@ -15,9 +15,9 @@
                            └───────────────────────────────────────────────────────────────────────┘
 ```
 
-Three processes, one backend. The simulator is deliberately **outside** Sentinel: it plays the
-customer's agents and reaches Sentinel only through the public gateway API, which is the same shape as
-a real SDK / sidecar / proxy integration. Customers do not host agents "inside" Sentinel.
+Three processes, one backend. The simulator is deliberately **outside** Lattice: it plays the
+customer's agents and reaches Lattice only through the public gateway API, which is the same shape as
+a real SDK / sidecar / proxy integration. Customers do not host agents "inside" Lattice.
 
 ## 2. Request lifecycle (`services/gateway/pipeline.py`)
 
@@ -103,7 +103,7 @@ Log, public read), and the `ans-verify` CLI (offline crypto verification).
 `verified = status == ACTIVE AND name matches AND receipt VERIFIED`.
 Results are cached (`ANS_CACHE_TTL_SECONDS`, default 60s) and pre-warmed at startup. If the TL is
 unreachable, the last **real** answer is served for up to `ANS_STALE_OK_SECONDS`, flagged `stale`;
-with no cached answer, Sentinel **fails closed** (`UNREACHABLE`). Registration is a one-time setup
+with no cached answer, Lattice **fails closed** (`UNREACHABLE`). Registration is a one-time setup
 step done with the reference impl's own tooling (`docs/ANS.md`), never at request time.
 
 **Mock adapter:** registry from `world.yaml → ansMockRegistry`, which mirrors what we registered in
@@ -149,7 +149,7 @@ separate, permanent ANS lifecycle action (P2, explicit operator confirmation).
 
 ## 10. Gemini (`services/gemini/`, Person 3)
 
-**Two parallel detectors feed the Sentinel controller.** Hard policy is fast and objective; Gemini is
+**Two parallel detectors feed the Lattice controller.** Hard policy is fast and objective; Gemini is
 the semantic brain. It answers: *is this sequence of actions consistent with the agent's role and its
 current task?* — the thing rules cannot express.
 
@@ -161,7 +161,7 @@ Two triggers into the same analyzer (`AnalysisRunner`):
 
 Telemetry: role, **current task**, recent action window (with resource sensitivity), deterministic
 signals, delegation targets. Gemini returns `GeminiAnalysisOutput` (anomaly type, severity, confidence,
-**violations[]**, reason, recommended action) — **it never emits a 0–100 score.** Sentinel maps
+**violations[]**, reason, recommended action) — **it never emits a 0–100 score.** Lattice maps
 severity → a bounded contribution (`weight_ai_semantic_*` in `RiskPolicy`), and a **CRITICAL finding at
 ≥ `ai_quarantine_min_confidence` (0.85), real `source=="gemini"` only, quarantines the agent directly**
 — even when deterministic signals stayed calm. The quarantine event records Gemini's severity,
@@ -205,5 +205,5 @@ also a test (`--check`). The control API (`:8001`) lets the dashboard trigger sc
 
 - No proof-of-possession: we verify the *claimed* ANS name is registered and ACTIVE, not that the
   caller holds its key. Production: mTLS with the ANS-issued identity certificate. Signed requests are P2.
-- Agent actions are simulated; Sentinel decides and records but doesn't proxy real payloads.
+- Agent actions are simulated; Lattice decides and records but doesn't proxy real payloads.
 - Risk scoring is heuristic; findings are rule-based summaries of observed history.

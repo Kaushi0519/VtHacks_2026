@@ -1,6 +1,6 @@
 "use client";
 // Owner: Person 2. Bottom panel. Explains the selected decision / incident / agent.
-// IDENTITY (ANS: who is it?) and BEHAVIOR (Sentinel: is it behaving?) are always separate columns.
+// IDENTITY (ANS: who is it?) and BEHAVIOR (Lattice: is it behaving?) are always separate columns.
 import clsx from "clsx";
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";

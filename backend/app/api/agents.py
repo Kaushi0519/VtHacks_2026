@@ -39,7 +39,7 @@ async def quarantine_agent(
     c: Container = Depends(get_container),
     _: str = Depends(require_operator),
 ) -> Agent:
-    """Operator kill switch (Sentinel-level isolation)."""
+    """Operator kill switch (Lattice-level isolation)."""
     async with c.state_lock:
         with c.session_factory() as db:
             agent = _require_agent(db, agent_id)

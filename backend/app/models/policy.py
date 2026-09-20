@@ -48,7 +48,7 @@ class RiskPolicy(WorldConfigModel):
     weight_repeated_denials: int = 10
     weight_expired_grant_use: int = 5
     weight_honeypot: int = 50
-    # Gemini SEMANTIC findings map to bounded score contributions (Sentinel owns the number, not the LLM).
+    # Gemini SEMANTIC findings map to bounded score contributions (Lattice owns the number, not the LLM).
     # Only real (source=="gemini") analysis contributes; the rule-based fallback never does.
     weight_ai_semantic_medium: int = 10
     weight_ai_semantic_high: int = 25

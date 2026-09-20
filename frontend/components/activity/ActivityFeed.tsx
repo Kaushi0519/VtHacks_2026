@@ -74,7 +74,7 @@ export function ActivityFeed() {
   );
 }
 
-// Allowed traffic is the quiet baseline; anything Sentinel blocked or escalated stays loud.
+// Allowed traffic is the quiet baseline; anything Lattice blocked or escalated stays loud.
 function FeedRow({ e, who, known, selected, onClick }: { e: SentinelEvent; who: string; known: boolean; selected: boolean; onClick: () => void }) {
   const d = e.decision ? decisionStyle[e.decision] : null;
   const quiet = e.decision === "allow";

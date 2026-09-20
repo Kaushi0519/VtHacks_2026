@@ -1,4 +1,4 @@
-"""Incidents group the evidence that explains why Sentinel acted. Owner: Person 1.
+"""Incidents group the evidence that explains why Lattice acted. Owner: Person 1.
 
 One OPEN incident per agent at a time: incident-worthy events open it, later non-allowed
 events for the same agent append to it, and releasing the agent resolves it.

@@ -1,4 +1,4 @@
-# Sentinel Mesh dev commands. Needs: uv (brew install uv), node 20+.
+# Lattice dev commands. Needs: uv (brew install uv), node 20+.
 .PHONY: setup backend sim frontend test smoke reset backfill
 
 setup:            ## install everything

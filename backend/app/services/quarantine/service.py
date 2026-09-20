@@ -3,7 +3,7 @@
 While quarantined every request is denied (AGENT_QUARANTINED) regardless of grants, and its
 temporary grants are revoked (least privilege on compromise).
 
-Kill switch note: this is Sentinel-level isolation. Revoking the agent's identity itself is an
+Kill switch note: this is Lattice-level isolation. Revoking the agent's identity itself is an
 ANS lifecycle operation (POST /v1/agents/{agentId}/revoke). That is a P2 stretch and must stay
 an explicit operator action: ANS revocation is permanent.
 """

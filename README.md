@@ -1,10 +1,10 @@
-# Sentinel Mesh
+# Lattice
 
 **A zero-trust security gateway + control plane for networks of AI agents.**
 *Identity is verified. Behavior is continuously evaluated.*
 
 > **Identity does not automatically imply behavioral trust.**
-> ANS tells Sentinel **who** an agent is. Sentinel decides whether that agent's **behavior** still
+> ANS tells Lattice **who** an agent is. Lattice decides whether that agent's **behavior** still
 > deserves access — and quarantines it when it doesn't.
 
 ## ▶ Live demo
@@ -21,7 +21,7 @@ bottom of the page**:
      Its Behavioral Risk Score spikes past critical → **quarantined** (the buggy insider).
    - **IntakeAgent** joins with a valid ANS identity, then reaches for the credential vault and
      patient records it was never meant to touch → **quarantined** (the credentialed thief).
-3. Click any red agent → the inspector shows **Identity (ANS) · Behavior (Sentinel) · Why**,
+3. Click any red agent → the inspector shows **Identity (ANS) · Behavior (Lattice) · Why**,
    including Gemini's reasoning.
 4. Also try **6 · Real LLM agent** (a genuine LLM agent caught live by Gemini's semantic review) and
    the **Accountability** tab for per-agent findings over time.
@@ -30,7 +30,7 @@ bottom of the page**:
 
 ## What it is
 
-Agents call APIs, data, tools and each other autonomously. Sentinel sits in between (as a gateway /
+Agents call APIs, data, tools and each other autonomously. Lattice sits in between (as a gateway /
 SDK / sidecar would) and decides, **per request**, whether to allow it:
 
 - **Identity (ANS):** who is this agent, and is that identity registered and ACTIVE?
@@ -46,7 +46,7 @@ SDK / sidecar would) and decides, **per request**, whether to allow it:
 
 ## Sponsors / tracks
 
-- **GoDaddy — Agent Name Service (identity).** ANS is Sentinel's identity foundation — the whole model
+- **GoDaddy — Agent Name Service (identity).** ANS is Lattice's identity foundation — the whole model
   is built on top of ANS-verified identity. We implemented a **spec-compliant ANS v2 adapter**
   (`backend/app/services/ans/reference.py`) that reads the Transparency Log badge and verifies the
   ES256/SCITT receipt. **This demo runs ANS in mock mode — labeled `ANS MOCK` in the UI on purpose;**

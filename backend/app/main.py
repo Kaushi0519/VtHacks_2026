@@ -1,4 +1,4 @@
-"""Sentinel Mesh backend. Run: `uv run uvicorn app.main:app --reload --port 8000` (ONE worker)."""
+"""Lattice backend. Run: `uv run uvicorn app.main:app --reload --port 8000` (ONE worker)."""
 
 import asyncio
 import contextlib

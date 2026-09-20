@@ -2,7 +2,7 @@
 // Two edge types:
 //   mesh:   the standing topology (who normally talks to what). Dims/cuts on quarantine.
 //   packet: one gateway decision. Allowed packets travel the whole way; blocked ones stop
-//           halfway (at Sentinel) and burst into an ✕.
+//           halfway (at Lattice) and burst into an ✕.
 import { BaseEdge, getBezierPath, Position, type Edge, type EdgeProps } from "@xyflow/react";
 import { useLayoutEffect, useRef } from "react";
 import { countdownLabel } from "@/lib/grants";

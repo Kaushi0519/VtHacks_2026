@@ -1,7 +1,7 @@
-"""ANSService: the only way Sentinel talks to the Agent Name Service. Owner: Person 3.
+"""ANSService: the only way Lattice talks to the Agent Name Service. Owner: Person 3.
 
 ANS establishes WHO an agent is (registration, resolution, lifecycle, revocation).
-Sentinel decides whether that verified agent's CURRENT BEHAVIOR deserves access.
+Lattice decides whether that verified agent's CURRENT BEHAVIOR deserves access.
 Nothing outside app/services/ans/ may know ANS endpoint details.
 """
 

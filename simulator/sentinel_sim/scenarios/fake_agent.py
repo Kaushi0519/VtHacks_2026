@@ -12,6 +12,6 @@ def build() -> Scenario:
                     expect="deny", expect_reason="IDENTITY_UNVERIFIED", pause=1.5),
             Request("payroll-sync-bot", "hr.employee.read",
                     expect="deny", expect_reason="IDENTITY_UNVERIFIED"),
-            Note("ANS can't resolve it, so Sentinel never even evaluates policy."),
+            Note("ANS can't resolve it, so Lattice never even evaluates policy."),
         ],
     )

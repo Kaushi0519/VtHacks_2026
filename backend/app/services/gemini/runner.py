@@ -5,7 +5,7 @@ Two triggers feed the same analyzer:
   - schedule_review(agent_id): the agent touched sensitive data but NO rule fired; run a semantic
     review so Gemini can catch a malicious *sequence* of individually-permitted actions.
 
-Applying the result (Sentinel owns the decision, Gemini supplies the semantic evidence):
+Applying the result (Lattice owns the decision, Gemini supplies the semantic evidence):
   - a bounded score contribution from the severity (semantic_points), and
   - a Gemini-TRIGGERED quarantine when the finding is CRITICAL at high confidence and real
     (source=="gemini"). The rule-based fallback never quarantines and never moves the score.

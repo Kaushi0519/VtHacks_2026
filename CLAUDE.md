@@ -1,20 +1,20 @@
-# CLAUDE.md: Sentinel Mesh
+# CLAUDE.md: Lattice
 
 VTHacks 2026, 4-person team. Read this first, then `docs/ARCHITECTURE.md` for detail,
 `docs/API.md` for contracts, `docs/DEMO.md` for the presentation, `docs/TASKS.md` for who does what.
 
 ## What we're building
 
-**Sentinel Mesh** is a zero-trust security gateway + control plane for networks of AI agents.
-Agents call APIs, data, tools and each other autonomously. Sentinel sits in between (as a
+**Lattice** is a zero-trust security gateway + control plane for networks of AI agents.
+Agents call APIs, data, tools and each other autonomously. Lattice sits in between (as a
 gateway / SDK / sidecar would) and decides, per request, whether to allow it.
 
 > **Identity does not automatically imply behavioral trust.**
-> ANS tells Sentinel *who* the agent is. Sentinel decides whether its *behavior* still deserves access.
+> ANS tells Lattice *who* the agent is. Lattice decides whether its *behavior* still deserves access.
 
 Demo tenant: a hospital with FacilitiesAgent, PayrollAgent, SchedulingAgent, AnalyticsAgent,
 DatabaseAgent. The "wow": the real, ANS-verified FacilitiesAgent requests `payroll.salary.read`,
-its Behavioral Risk Score spikes, and Sentinel quarantines it.
+its Behavioral Risk Score spikes, and Lattice quarantines it.
 
 ## Current status (keep this section up to date; last updated 2026-09-19)
 
@@ -37,7 +37,7 @@ its Behavioral Risk Score spikes, and Sentinel quarantines it.
 - **Gemini is a real second detector (can quarantine):** `GEMINI_MODE=real`. Two triggers feed the
   analyzer — incident (a rule fired) and **semantic review** (agent aggregated ≥3 sensitive allowed
   accesses, no rule fired). Gemini judges the action sequence vs role + `current_task`; severity →
-  bounded score points (Sentinel owns the number); CRITICAL ≥0.85, real-`gemini`-only, triggers
+  bounded score points (Lattice owns the number); CRITICAL ≥0.85, real-`gemini`-only, triggers
   quarantine (fallback never enforces). Scenario `subtle_exfiltration` proves it (verified live:
   severity=critical 0.95 → quarantine, static stayed ALLOW). Model `gemini-flash-lite-latest`
   (flash-latest 503s under load, 2.5-flash retired); free key per `.env`, `mock` needs none. See
@@ -47,7 +47,7 @@ its Behavioral Risk Score spikes, and Sentinel quarantines it.
   with threshold risk meters. F2 done: fixed-layout mesh graph (`components/graph/`) with a packet
   per decision (green = allowed, red ✕ = blocked), cut links on quarantine, ghost nodes for unverified
   callers. F3 done: clickable live feed (filters, any decision is explainable) + inspector with
-  Identity (ANS) | Behavior (Sentinel) | Why (decision, labeled AI analysis, incident timeline).
+  Identity (ANS) | Behavior (Lattice) | Why (decision, labeled AI analysis, incident timeline).
   F4 done: permission decay is visible (countdown HUD on the mesh, dashed grant edge with timer,
   ⏱ badge on the agent card, grant cards with revoke in the inspector; red flash + fade on expiry).
   F5 done: accountability page (7-day KPI strip, fleet sorted worst-first with hypothesis badges +
@@ -56,7 +56,7 @@ its Behavioral Risk Score spikes, and Sentinel quarantines it.
   and Ishan's I4 demo bar (script steps 1/2/3, ambient toggle, double-click guard, live captions,
   confirm-to-reset, D hides it).
 - **Not started:** everything in "Stretch" below.
-- `IDEAS.MD` is the team's original brainstorm. The plan is Sentinel Mesh; the MVP scope below is
+- `IDEAS.MD` is the team's original brainstorm. The plan is Lattice; the MVP scope below is
   what we build first.
 - **Next steps:** each person starts their first P0 task in `docs/TASKS.md` on their own branch
   (Person 1 `backend/…`, Person 2 `frontend/…`, Person 3 `security/…`, Ishan `demo/…`). When you
@@ -115,18 +115,18 @@ Decisions: `allow | deny | require_human | quarantine`. Every decision has a mac
 | Identity | Who does this agent claim to be? | ANS name (`ans://v1.0.0.host`) |
 | Registration/lifecycle | Is that identity registered and ACTIVE? | GoDaddy ANS |
 | Proof of possession | Is the caller really that agent? | **Not in MVP** (prod: mTLS w/ ANS identity cert). Say so if asked. |
-| Enrollment | Is it one of *this company's* agents? | Sentinel (`AGENT_NOT_ENROLLED`) |
-| Authorization | May it use this scope right now? | Sentinel policy engine (deterministic) |
-| Behavior | Is what it's doing normal for it? | Sentinel signals + Behavioral Risk Score |
-| Enforcement | What happens now? | Sentinel enforcement (deterministic) |
+| Enrollment | Is it one of *this company's* agents? | Lattice (`AGENT_NOT_ENROLLED`) |
+| Authorization | May it use this scope right now? | Lattice policy engine (deterministic) |
+| Behavior | Is what it's doing normal for it? | Lattice signals + Behavioral Risk Score |
+| Enforcement | What happens now? | Lattice enforcement (deterministic) |
 
 - **ANS rule:** GoDaddy ANS establishes and resolves agent identity and its lifecycle/integrity
-  information. Sentinel adds customer-environment behavioral monitoring and enforcement. Don't call
-  Sentinel's score a "trust score". It is the **Behavioral Risk Score**, separate from anything ANS exposes.
+  information. Lattice adds customer-environment behavioral monitoring and enforcement. Don't call
+  Lattice's score a "trust score". It is the **Behavioral Risk Score**, separate from anything ANS exposes.
 - **Gemini rule (two parallel detectors):** hard policy handles identity + objective violations
   instantly (and quarantines obvious attacks without waiting). **Gemini is the SEMANTIC detector:**
   it judges whether a *sequence* of individually-permitted actions is consistent with the agent's
-  role and current task. Gemini does NOT emit a 0–100 score — **Sentinel owns the score**; a Gemini
+  role and current task. Gemini does NOT emit a 0–100 score — **Lattice owns the score**; a Gemini
   severity maps to a bounded contribution. Gemini MAY itself trigger quarantine on a CRITICAL finding
   at ≥0.85 confidence, but only real `source=="gemini"` (never the rule-based fallback), and every
   AI-triggered quarantine logs Gemini's severity, confidence, and reasoning on the event. Never put

@@ -1,5 +1,5 @@
 """Simulator control API (port 8001). The dashboard's demo panel calls this to start scenarios.
-The scenarios themselves only talk to Sentinel through its public gateway API."""
+The scenarios themselves only talk to Lattice through its public gateway API."""
 
 import asyncio
 import os

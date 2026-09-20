@@ -1,4 +1,4 @@
-"""Tests for the Gemini semantic-enforcement model: Sentinel owns the score, fallback never enforces."""
+"""Tests for the Gemini semantic-enforcement model: Lattice owns the score, fallback never enforces."""
 
 import asyncio
 

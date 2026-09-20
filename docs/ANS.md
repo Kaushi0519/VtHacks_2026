@@ -128,7 +128,7 @@ changing ANS versions:
 - We use ANS's *actual* mechanisms: transparency-log badge + **cryptographically verified SCITT receipt**,
   not just "is it registered." Identity is domain-anchored and provable.
 - Trust Index (integrity, identity, solvency, **behavior**, safety): our Behavioral Risk Score *is* the
-  behavior dimension — Sentinel consumes ANS identity and contributes behavior signal.
+  behavior dimension — Lattice consumes ANS identity and contributes behavior signal.
 - **Limitation (say it):** we verify the agent's registered state + receipt; we do not yet do full mTLS
   proof-of-possession per request (ANS issues identity certs for exactly this — a strong next step).
 

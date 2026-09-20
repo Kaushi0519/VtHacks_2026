@@ -1,4 +1,4 @@
-"""Step 1 of the demo: the hospital brings its agent fleet online under Sentinel.
+"""Step 1 of the demo: the hospital brings its agent fleet online under Lattice.
 
 Deliberately short (~15s). Each agent checks in with one request in its own baseline scope, so the
 mesh lights up column by column and the presenter can name each agent as it appears. Every call is

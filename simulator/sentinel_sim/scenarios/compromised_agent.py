@@ -17,7 +17,7 @@ def build() -> Scenario:
     return Scenario(
         id="compromised_agent",
         title="Compromised legitimate agent",
-        description="FacilitiesAgent's identity stays valid in ANS, but its behavior goes wrong. Sentinel quarantines it.",
+        description="FacilitiesAgent's identity stays valid in ANS, but its behavior goes wrong. Lattice quarantines it.",
         steps=[
             Note("FacilitiesAgent is doing its normal job."),
             Request(AGENT, "building.energy.read", expect="allow"),

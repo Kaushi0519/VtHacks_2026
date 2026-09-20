@@ -1,4 +1,4 @@
-"""The Sentinel request lifecycle. Owner: Person 1 (orchestration only).
+"""The Lattice request lifecycle. Owner: Person 1 (orchestration only).
 
     1. identity    ANS resolves + verifies the claimed name        -> DENY if unverified
     2. quarantine  isolated agents get nothing                     -> DENY
@@ -165,7 +165,7 @@ class Gateway:
         profile = mark_fired(profile, signals, now)
         result = None
         if decision == Decision.ALLOW:
-            # Agents' real work is simulated; Sentinel only decides and records.
+            # Agents' real work is simulated; Lattice only decides and records.
             profile = learn(profile, req.action, resource.id if resource else None, req.target_agent_id, now)
             result = {"status": "executed", "simulated": True}
             event.metadata["result"] = "executed (simulated)"

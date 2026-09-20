@@ -14,7 +14,7 @@ from app.models.policy import PermissionGrant
 
 
 class AgentRequest(ApiModel):
-    """What an agent (via SDK / sidecar / proxy) submits to the Sentinel gateway."""
+    """What an agent (via SDK / sidecar / proxy) submits to the Lattice gateway."""
 
     actor_ans_name: str  # claimed identity, verified against ANS
     actor_agent_id: str | None = None  # optional hint; must match the enrolled agent if given

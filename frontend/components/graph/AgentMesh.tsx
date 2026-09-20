@@ -1,6 +1,6 @@
 "use client";
 // Owner: Person 2. The live agent mesh: unverified callers | agents | resources.
-// Every gateway decision fires a packet (green = allowed, red ✕ = blocked at Sentinel).
+// Every gateway decision fires a packet (green = allowed, red ✕ = blocked at Lattice).
 // Quarantined agents turn red and their links are cut. Unknown actors appear as ghost nodes.
 // Live just-in-time grants draw as dashed edges with a countdown (big timer lives in the agent sidebar).
 import { Background, ReactFlow, ReactFlowProvider, useReactFlow, useUpdateNodeInternals, type CoordinateExtent, type Edge, type Node } from "@xyflow/react";

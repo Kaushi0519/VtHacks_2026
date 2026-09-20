@@ -24,7 +24,7 @@ class QuarantineInfo(ApiModel):
 
 
 class Agent(ApiModel):
-    id: str  # Sentinel-local id, e.g. "facilities-agent"
+    id: str  # Lattice-local id, e.g. "facilities-agent"
     display_name: str
     role: str
     description: str = ""
@@ -32,7 +32,7 @@ class Agent(ApiModel):
     ans_name: str  # e.g. "ans://v1.0.0.facilities.demo-hospital.example"
     identity: IdentityResult | None = None  # last ANS check
     status: AgentStatus = AgentStatus.ACTIVE
-    # Sentinel's Behavioral Risk Score (0-100). NOT an ANS trust/integrity score.
+    # Lattice's Behavioral Risk Score (0-100). NOT an ANS trust/integrity score.
     risk_score: int
     risk_level: RiskLevel
     baseline_risk: int  # cool-down floor

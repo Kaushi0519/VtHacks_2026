@@ -35,7 +35,7 @@ class RecommendedAction(StrEnum):
 
 class GeminiAnalysisOutput(BaseModel):
     """Exact structured-output schema we ask Gemini for. Kept constraint-free for the SDK;
-    Sentinel validates and clamps before use. Gemini supplies SEMANTIC findings; Sentinel owns the score."""
+    Lattice validates and clamps before use. Gemini supplies SEMANTIC findings; Lattice owns the score."""
 
     anomaly_type: AnomalyType
     severity: Severity

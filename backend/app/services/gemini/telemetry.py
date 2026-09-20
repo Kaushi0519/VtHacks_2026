@@ -2,7 +2,7 @@
 
 Gemini does SEMANTIC analysis: is this agent's behavior consistent with its role and its current task?
 So the telemetry centers on identity (role, task), a recent action window (with resource sensitivity),
-the deterministic anomaly signals, and who it has been delegating to. Only facts Sentinel observed;
+the deterministic anomaly signals, and who it has been delegating to. Only facts Lattice observed;
 no raw payloads, no secrets.
 """
 

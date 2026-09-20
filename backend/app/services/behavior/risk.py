@@ -35,7 +35,7 @@ def apply_signals(before: int, signals: list[RiskSignal]) -> int:
 
 
 def semantic_points(source: str, severity: Severity, rp: RiskPolicy) -> int:
-    """Bounded score contribution from a Gemini SEMANTIC finding. Sentinel owns the number, and only
+    """Bounded score contribution from a Gemini SEMANTIC finding. Lattice owns the number, and only
     a real (source=="gemini") finding counts — the rule-based fallback never moves the score."""
     if source != "gemini":
         return 0

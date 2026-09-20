@@ -1,7 +1,7 @@
 """Identity as reported by ANS. CONTRACT FILE (see models/common.py).
 
 ANS answers "who is this agent, and is its registration valid?". It says nothing about
-whether the agent's *current behavior* is acceptable; that is Sentinel's job.
+whether the agent's *current behavior* is acceptable; that is Lattice's job.
 """
 
 from datetime import datetime
@@ -11,7 +11,7 @@ from app.models.common import ApiModel
 
 # ANS lifecycle statuses come straight from GoDaddy ANS (AgentLifecycleStatus):
 #   PENDING_VALIDATION, PENDING_DNS, ACTIVE, FAILED, EXPIRED, DEPRECATED, REVOKED
-# plus Sentinel-side outcomes when no lifecycle status could be read:
+# plus Lattice-side outcomes when no lifecycle status could be read:
 #   NOT_FOUND (name does not resolve), INVALID_NAME, UNREACHABLE (ANS down, no usable cache)
 AnsStatus = str
 
