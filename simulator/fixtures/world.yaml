@@ -116,6 +116,19 @@ agents:
     peers: [analytics-agent]
     expectedRpm: 10
     initialRisk: 5
+  # A newly onboarded third-party assistant. ANS-verified (correct identity + name) and enrolled,
+  # but it is actually a malicious bot: after a bit of normal-looking work it reaches for the
+  # credential vault and patient records it has no business touching. The "credentialed thief"
+  # quarantine, distinct from the runaway-loop malfunction. Registered in ansMockRegistry below.
+  - id: intake-agent
+    displayName: IntakeAgent
+    role: scheduling
+    ansName: ans://v1.0.0.intake.demo-hospital.example
+    description: Third-party intake assistant onboarded this week to help schedule patient visits.
+    currentTask: Assist with scheduling new patient intake appointments.
+    peers: [scheduling-agent]
+    expectedRpm: 5
+    initialRisk: 5
 
 # Behavioral risk heuristics. Defaults live in models/policy.py::RiskPolicy; override here.
 riskPolicy:
@@ -131,5 +144,6 @@ ansMockRegistry:
   - {ansName: "ans://v1.0.0.scheduling.demo-hospital.example", ansAgentId: "0f7c2a1e-0000-4000-8000-000000000003"}
   - {ansName: "ans://v1.0.0.analytics.demo-hospital.example", ansAgentId: "0f7c2a1e-0000-4000-8000-000000000004"}
   - {ansName: "ans://v1.0.0.database.demo-hospital.example", ansAgentId: "0f7c2a1e-0000-4000-8000-000000000005"}
+  - {ansName: "ans://v1.0.0.intake.demo-hospital.example", ansAgentId: "0f7c2a1e-0000-4000-8000-000000000006"}
   # A real, ACTIVE ANS agent that belongs to someone else: tests AGENT_NOT_ENROLLED.
   - {ansName: "ans://v1.0.0.courier.partner-clinic.example", ansAgentId: "0f7c2a1e-0000-4000-8000-0000000000aa"}

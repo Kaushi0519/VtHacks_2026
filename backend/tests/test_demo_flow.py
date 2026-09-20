@@ -172,5 +172,5 @@ def test_snapshot_shape(client):
     snap = client.get("/api/snapshot").json()
     assert {"system", "agents", "resources", "graph", "grants", "incidents", "events", "lastSeq"} <= snap.keys()
     assert snap["system"]["ansMode"] == "mock"
-    assert len(snap["agents"]) == 5
+    assert len(snap["agents"]) == 6
     assert any(e["kind"] == "access" for e in snap["graph"]["edges"])
