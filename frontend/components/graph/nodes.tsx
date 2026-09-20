@@ -18,10 +18,25 @@ export type ZoneNodeData = { label: string; tone?: "crit" };
 
 export function AgentNode({ data: { agent: a, active, selected } }: NodeProps<Node<AgentNodeData>>) {
   const quarantined = a.status === "quarantined";
+  // An agent the gateway has never heard from. True only on a freshly reset world, which is exactly
+  // the blank slate the demo opens on: the fleet is registered but nothing has come online yet, so
+  // each one is an empty slot until its first request lands and it pops into place.
+  if (a.lastSeenAt === null && !quarantined) {
+    return (
+      <div className="w-[200px] rounded-lg border border-dashed border-line/70 bg-void/40 px-3 py-2">
+        <Handle type="target" position={Position.Left} id="in" className={hidden} />
+        <Handle type="source" position={Position.Left} id="peer-out" className={hidden} />
+        <Handle type="source" position={Position.Right} id="out" className={hidden} />
+        <div className="truncate text-[13px] font-semibold text-dim/70">{a.displayName}</div>
+        <div className="mt-1.5 h-1 rounded-full bg-line/50" />
+        <div className="mt-1 font-mono text-[10px] tracking-widest text-dim/60">OFFLINE</div>
+      </div>
+    );
+  }
   return (
     <div
       className={clsx(
-        "w-[200px] rounded-lg border bg-panel px-3 py-2 transition-shadow duration-300",
+        "w-[200px] animate-node-in rounded-lg border bg-panel px-3 py-2 transition-shadow duration-300",
         quarantined ? "border-crit glow-crit animate-alarm" : selected ? "border-accent" : "border-accent/40",
         active && !quarantined && "shadow-[0_0_0_1px_#22d3ee,0_0_22px_rgb(34_211_238/0.45)]",
       )}
