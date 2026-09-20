@@ -18,7 +18,7 @@ answering questions and started taking actions, with credentials granted once an
 
 ## Script
 
-### Speaker 1 — hook (0:00–0:25)
+### Speaker 1 — hook (0:00–0:40)
 > "This summer, twelve hundred AI agents in OpenAI's sandboxes coordinated their way out of
 > containment, with no human directing them. OpenAI found out when **Hugging Face reported its
 > production infrastructure breached** — a third of it had to be rebuilt.
@@ -29,7 +29,7 @@ answering questions and started taking actions, with credentials granted once an
 > That's why we built Lattice. It watches what your agents *do*, not just who they are — and cuts them
 > off when they go wrong."
 
-*(~25s. Pause before the last sentence and slow down — it's the line the whole demo pays off, and
+*(96 words, ~40s. Pause before "Every one of those agents" and slow down — it's the line the whole demo pays off, and
 the line Speaker 1 closes on.)*
 
 **Why not "zero-trust security gateway" out loud:** in security, zero trust reads as *identity*
@@ -53,7 +53,7 @@ answers without taking a side.
 challenges a number, say what you know and don't improvise. Never claim Sentinel would have prevented
 it — the honest claim is that nothing was watching behavior, which is the gap we built for.
 
-### Speaker 2 — what it is (0:25–0:50) · **start the tenant run as you begin speaking**
+### Speaker 2 — what it is (0:40–1:00) · **start the tenant run as you begin speaking**
 > "So we built Sentinel Mesh: a zero-trust security gateway for networks of AI agents. Every action an
 > agent takes goes through it, and it decides — allow, deny, or isolate — in real time.
 >
@@ -66,7 +66,7 @@ it — the honest claim is that nothing was watching behavior, which is the gap 
 > What you're watching is a hospital: six ANS-verified agents doing their normal jobs. Green means
 > allowed. This is a system behaving."
 
-### Speaker 3 — the living hospital (0:50–2:30) · narrate what appears, don't read the clock
+### Speaker 3 — the living hospital (1:00–2:35) · narrate what appears, don't read the clock
 Cue off the **screen**, not the stopwatch — the run paces itself.
 
 **When the countdown appears on AnalyticsAgent:**
@@ -91,7 +91,7 @@ Cue off the **screen**, not the stopwatch — the run paces itself.
 > "That agent's identity was never the problem. It was exactly who it claimed to be. Its *behavior*
 > was the problem — and that's the thing an identity check can't see."
 
-### Speaker 4 — what the rules can't catch (2:30–3:15)
+### Speaker 4 — what the rules can't catch (2:35–3:15)
 *(Click the incident → the "Why" panel.)*
 > "Those two were caught by deterministic rules — forbidden scope, rate spikes, hard thresholds. Fast,
 > explainable, no AI in the decision path.
@@ -120,10 +120,10 @@ Cue off the **screen**, not the stopwatch — the run paces itself.
 
 | Time | Who | On screen |
 |---|---|---|
-| 0:00–0:25 | S1 | dashboard idle, all green |
-| 0:25–0:50 | S2 | **start `tenant` now**; fleet comes online |
-| 0:50–2:30 | S3 | decay countdown → malfunction quarantine → malicious quarantine |
-| 2:30–3:15 | S4 | incident "Why" panel, Gemini reasoning |
+| 0:00–0:40 | S1 | dashboard idle, all green |
+| 0:40–1:00 | S2 | **start `tenant` now**; fleet comes online |
+| 1:00–2:35 | S3 | decay countdown → malfunction quarantine → malicious quarantine |
+| 2:35–3:15 | S4 | incident "Why" panel, Gemini reasoning |
 | 3:15–4:00 | S1 | accountability page, close |
 
 **Start the run:** `cd simulator && uv run python -m sentinel_sim tenant --pace 1.3` (~2 min), or the
